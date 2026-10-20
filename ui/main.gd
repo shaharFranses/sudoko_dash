@@ -292,7 +292,8 @@ func _build_grid_screen() -> void:
 	grid_view.size_flags_horizontal = SIZE_EXPAND_FILL
 	grid_view.size_flags_vertical = SIZE_EXPAND_FILL
 	grid_view.cell_tapped.connect(_on_cell)
-	grid_view.target_cells = targets
+	# Digit Hunt: never outline T (it would reveal where the digit goes). Counter only.
+	grid_view.target_cells = [] if (not level.is_empty() and str(level.params.get("inner", level.objective)) == "digit") else targets
 	grid_view.lantern_path = []
 	if not level.is_empty():
 		var inner = str(level.params.get("inner", level.objective))

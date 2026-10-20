@@ -10,7 +10,7 @@ const Obj = preload("res://game/objectives.gd")
 const Rng = preload("res://sudoku/rng.gd")
 
 # grid_id: pack
-const GRID_PACKS = {"G01": "4x4_t1", "G02": "4x4_t1", "G03": "6x6_t1", "G04": "6x6_t1", "G05": "6x6_t2", "G06": "6x6_t2",
+const GRID_PACKS = {"G01": "6x6_t1", "G02": "6x6_t1", "G03": "6x6_t1", "G04": "6x6_t1", "G05": "6x6_t2", "G06": "6x6_t2",
 	"G07": "9x9_t2", "G08": "9x9_t2", "G09": "9x9_t2", "G10": "9x9_t2", "G11": "9x9_t3", "G12": "9x9_t3"}
 # [level, grid, objective, params-spec, allowed tiers]
 const TABLE = [
@@ -153,7 +153,7 @@ func _init() -> void:
 			"par_time_s": Obj.par_time_s(n, a.steps_to_last_target, float(params.par_mult)) if row[2] == "tide" else null}
 		levels.append(lvl)
 	var f = FileAccess.open("res://data/levels/harbour.json", FileAccess.WRITE)
-	f.store_string(JSON.stringify({"format": 1, "area": "harbour", "spec": "LEVEL_OBJECTIVES_SPEC v1", "grids": grids, "levels": levels}, "  "))
+	f.store_string(JSON.stringify({"format": 1, "area": "harbour", "spec": "LEVEL_OBJECTIVES_SPEC v1.3", "grids": grids, "levels": levels}, "  "))
 	f.close()
 	for l in levels:
 		print("L%02d %s %dx%d %-8s tier %d steps_to_t %3d par %s T=%d %s" % [l.level, l.grid_id, l.size, l.size, l.objective, l.tier, l.steps_to_t, str(l.par_time_s), l.target.size(), JSON.stringify(l.params)])

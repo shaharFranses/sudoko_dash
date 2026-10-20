@@ -60,23 +60,24 @@ func _finish_grid():
 	main.start_path_grid()
 	var b = main.board
 	for i in b.cells.size():
+		if main.screen_name != "grid": break
 		if b.cells[i] == 0: main._on_cell(i); main._on_digit(b.solution[i])
 
 func test_b4_double_coins_updates_label():
 	_finish_grid()
 	var lbl = main.root.find_child("ResultsRewards", true, false)
-	assert_string_starts_with(lbl.text, "+10 coins")
+	assert_string_starts_with(lbl.text, "+20 coins")   # v1.3: L1 is 6x6
 	var coins = main.profile.coins
-	await main._double(10)
-	assert_eq(main.profile.coins, coins + 10)
-	assert_string_starts_with(lbl.text, "+20 coins")
+	await main._double(20)
+	assert_eq(main.profile.coins, coins + 20)
+	assert_string_starts_with(lbl.text, "+40 coins")
 	assert_null(main.root.find_child("RewardedDouble", true, false))
 
 func test_b4_failed_double_keeps_label():
 	_finish_grid()
 	Ads.set_mode("mock_error")
-	await main._double(10)
-	assert_string_starts_with(main.root.find_child("ResultsRewards", true, false).text, "+10 coins")
+	await main._double(20)
+	assert_string_starts_with(main.root.find_child("ResultsRewards", true, false).text, "+20 coins")
 
 func test_qa_api_set_coins_tokens_reset_cap():
 	var h = Dbg.hooks

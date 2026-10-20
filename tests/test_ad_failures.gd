@@ -148,6 +148,7 @@ func _double_case(mode: String, result: String):
 	main.start_path_grid()
 	var b = main.board
 	for i in b.cells.size():
+		if main.screen_name != "grid": break
 		if b.cells[i] == 0: main._on_cell(i); main._on_digit(b.solution[i])
 	assert_eq(main.screen_name, "results")
 	var db = main.root.find_child("RewardedDouble", true, false)
@@ -172,6 +173,7 @@ func test_double_coins_leaving_results_while_pending_is_safe():
 	main.start_path_grid()
 	var b = main.board
 	for i in b.cells.size():
+		if main.screen_name != "grid": break
 		if b.cells[i] == 0: main._on_cell(i); main._on_digit(b.solution[i])
 	Ads.set_mode("mock_timeout")
 	main._double(10)

@@ -1,4 +1,4 @@
-# Sudoku Dash: Level Objectives Spec (v1.2: v1.1 plus QA clarifications in section 9)
+# Sudoku Dash: Level Objectives Spec (v1.3: no 4x4 on the path; Digit Hunt hides target positions)
 Owner: SD Game Design. Builds on VERTICAL_SLICE_SPEC.md v3.1 (input, notes, undo, mistakes, hints, ads, and save are unchanged unless stated here). In scope are 4 objective types plus Full Solve. Sum Spotlight is parked.
 - **Bar for future objectives:** each one has to change how the player plays, not just add a constraint or a reskin.
 
@@ -12,7 +12,7 @@ Owner: SD Game Design. Builds on VERTICAL_SLICE_SPEC.md v3.1 (input, notes, undo
 | Type | Player sees | T | Params |
 |---|---|---|---|
 | **Full Solve** | "Solve the board" | All empty cells | — |
-| **Digit Hunt** | "Place every 1" (cells with that digit are counted, e.g. 3/9) | Empty cells whose solution is d | `digit` |
+| **Digit Hunt** | "Place every 1" (cells with that digit are counted, e.g. 3/9). Target cells are **never** outlined or highlighted; the player must deduce them (v1.3) | Empty cells whose solution is d | `digit` |
 | **Fill the Line** | "Complete row 4" (the unit is outlined) | Empty cells of 1-2 units | `units: [{"kind":"row/col/box","index":0-based}]` |
 | **Lantern Path** | A chain of lanterns lights up as cells are solved | 6-10 orthogonally connected cells, at least 4 of them empty | `path: [[r,c],...]` |
 | **Beat the Tide** | A tide bar plus one of the objectives above | T of the inner objective | `inner` (any type above), `par_mult` |
@@ -24,7 +24,7 @@ Owner: SD Game Design. Builds on VERTICAL_SLICE_SPEC.md v3.1 (input, notes, undo
 - Only a level's first completion awards stars, and replaying keeps the best result. Quick and Classic modes give coins only.
 
 ## 4. Timer (Beat the Tide only)
-- `par_time_s = round((base + 6 × steps_to_T) × par_mult)`. The base is 10 for 4x4, 20 for 6x6, and 30 for 9x9.
+- `par_time_s = round((base + 6 × steps_to_T) × par_mult)`. The base is 20 for 6x6, and 30 for 9x9.
 - The timer is soft: reaching zero never fails the level, the bar just turns calm grey and the speed stars are gone.
 - The timer pauses whenever the Hint, Second chance, or Pause panel is open and when the tab is hidden. Each Reveal adds 15 s; Teach adds nothing.
 - Continue keeps the elapsed time. Retry resets it to 0. No ads during a level.
@@ -32,9 +32,9 @@ Owner: SD Game Design. Builds on VERTICAL_SLICE_SPEC.md v3.1 (input, notes, undo
 ## 5. Village Path (20 levels on 12 grids)
 | L | Grid | Size | Objective | Params | Tier |
 |---|---|---|---|---|---|
-| 1 | G01 | 4x4 | Digit Hunt | digit 1 | 1 |
-| 2 | G01 | 4x4 | Fill the Line | row 0 | 1 |
-| 3 | G02 | 4x4 | Full Solve | — | 1 |
+| 1 | G01 | 6x6 | Digit Hunt | digit 1 | 1 |
+| 2 | G01 | 6x6 | Fill the Line | row 0 | 1 |
+| 3 | G02 | 6x6 | Full Solve | — | 1 |
 | 4 | G03 | 6x6 | Digit Hunt | digit 3 | 1 |
 | 5 | G03 | 6x6 | Lantern Path | 6 cells | 1 |
 | 6 | G04 | 6x6 | Full Solve | — | 1 |
@@ -62,7 +62,7 @@ Owner: SD Game Design. Builds on VERTICAL_SLICE_SPEC.md v3.1 (input, notes, undo
  "params": {"inner": "line", "units": [{"kind": "box", "index": 4}], "par_mult": 1.75},
  "target": [[3,3],[3,5],[4,4]], "tier": 2, "steps_to_t": 23, "par_time_s": 294}
 ```
-Grids live in the existing packs and are referenced by `grid_id`. `target`, `tier`, `steps_to_t`, and `par_time_s` are computed by the tool and never written by hand. `par_time_s` is null for untimed levels. The 4x4 and 6x6 path grids are also pregenerated, so the path is identical for every player.
+Grids live in the existing packs and are referenced by `grid_id`. `target`, `tier`, `steps_to_t`, and `par_time_s` are computed by the tool and never written by hand. `par_time_s` is null for untimed levels. The 6x6 path grids are also pregenerated, so the path is identical for every player.
 
 ## 7. Out of scope
 Sum Spotlight (parked), failing a level when time runs out, leaderboards, variant rules, objectives in Quick and Classic modes, daily objective events, and an objective editor.
@@ -92,3 +92,9 @@ Sum Spotlight (parked), failing a level when time runs out, leaderboards, varian
 7. **Reload:** the restored elapsed_ms is within ±1,000 ms of the saved value. Saves happen on every input and at least every 5 s.
 8. **Reveal on the last target cell** completes the level, and it counts as a Reveal for stars (and adds +15 s).
 9. **Cap and the minimum-star run:** the 20-star run never needs a second chance, because Retry is always available. A test can use Retry or the debug hook that resets the cap. On a Beat the Tide level, the 1-star minimum comes from finishing over par.
+
+## 10. v1.3 changes (Shahar feedback, 2026-10-20)
+- **No 4x4 boards on the Village Path.** G01 and G02 now come from `6x6_t1`; L1-L10 are 6x6 and L11-L20 are 9x9. Objectives, params, tiers, star range (20-60) and Harbour costs (3/4/4/4/5 = 20) are unchanged.
+- Every path board uses the normal rules (3-mistake limit, Second chance). The 4x4 "Warm-up: no mistake limit" rule no longer appears on the path.
+- **Digit Hunt does not reveal positions.** The grid draws no outline/highlight on T for Digit Hunt (or a Beat the Tide with inner Digit Hunt). Only the counter (e.g. 3/6) is shown. Fill the Line and Lantern Path still mark their cells, since those are chosen by the level, not deduced.
+- Save migration: unchanged (level count is still 20). A save that had cleared L1-L3 keeps those clears; they now refer to the 6x6 versions.

@@ -277,7 +277,7 @@ func test_c3_completes_at_last_target_not_before():
 	assert_eq(main.screen_name, "results")
 
 func test_c4_wrong_outside_t_is_mistake_third_opens_second_chance():
-	main.start_level(6)   # L7 6x6 Fill the Line (4x4 has no mistake limit)
+	main.start_level(6)   # L7 6x6 Fill the Line (path boards have the 3-mistake limit)
 	var c = 0
 	while main.board.cells[c] != 0 or c in main.targets: c += 1
 	var wrong = []
@@ -322,3 +322,21 @@ func test_grid_title_shows_level_of_20():
 	for l in main.find_children("*", "Label", true, false):
 		if l.text == "Level 12/20": found = true
 	assert_true(found)
+
+func test_v13_digit_hunt_does_not_outline_targets():
+	main.start_level(0)   # L1 Digit Hunt
+	assert_eq(main.level.objective, "digit")
+	assert_gt(main.targets.size(), 0)
+	assert_eq(main.grid_view.target_cells, [], "Digit Hunt must not reveal target cells")
+	assert_false(main.objective_label.text.is_empty())
+
+func test_v13_line_still_outlines_targets():
+	main.start_level(1)   # L2 Fill the Line
+	assert_eq(main.grid_view.target_cells, main.targets)
+
+func test_v13_no_4x4_on_path_and_normal_mistake_rules():
+	for i in Levels.count():
+		assert_ne(int(Levels.level(i).size), 4, "L%d is 4x4" % (i + 1))
+	main.start_level(0)
+	assert_eq(main.board.max_mistakes, 3)
+	assert_false(main.mistakes_label.text.begins_with("Warm-up"))

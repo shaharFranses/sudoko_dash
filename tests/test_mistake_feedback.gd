@@ -15,24 +15,16 @@ func _start(size: int):
 		6: main.profile.path_next = 5; main.start_path_grid()
 		9: main.classic_tier = 1; main.start_classic()
 
-func test_label_4x4_warmup():
-	_start(4)
-	assert_eq(main.mistakes_label.text, "Warm-up: no mistake limit")
+func test_path_l1_has_normal_rules_v13():
+	_start(4)   # path L1 (6x6 since v1.3; no 4x4 on the path)
+	assert_eq(main.board.size, 6)
+	assert_eq(main.mistakes_label.text, "Mistakes 0/3")
 
 func test_label_6x6_and_9x9_counter():
 	_start(6)
 	assert_eq(main.mistakes_label.text, "Mistakes 0/3")
 	_start(9)
 	assert_eq(main.mistakes_label.text, "Mistakes 0/3")
-
-func test_4x4_label_unchanged_after_mistakes_and_no_panel():
-	_start(4)
-	var b = main.board
-	var i = b.cells.find(0)
-	for k in 4:
-		main._on_cell(i); main._on_digit(((b.solution[i] + k) % 4) + 1 if ((b.solution[i] + k) % 4) + 1 != b.solution[i] else ((b.solution[i] + k + 1) % 4) + 1)
-	assert_eq(main.mistakes_label.text, "Warm-up: no mistake limit")
-	assert_null(main.overlay)
 
 func _check_feedback(size: int):
 	_start(size)
@@ -58,7 +50,7 @@ func _check_feedback(size: int):
 	assert_eq(gv.feedback_count, before + 1)
 	assert_eq(Sfx.played.back(), "place")
 
-func test_feedback_4x4(): await _check_feedback(4)
+func test_feedback_path_l1(): await _check_feedback(6)
 func test_feedback_6x6(): await _check_feedback(6)
 func test_feedback_9x9(): await _check_feedback(9)
 
