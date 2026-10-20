@@ -391,6 +391,9 @@ func _unhandled_input(e: InputEvent) -> void:
 		if e.echo: return
 		_toggle_notes()
 	elif k == KEY_Z and (e.ctrl_pressed or e.meta_pressed):
+		if e.echo:   # holding Ctrl/Cmd+Z: one undo per press
+			get_viewport().set_input_as_handled()
+			return
 		_undo()
 	elif (k == KEY_BACKSPACE or k == KEY_DELETE) and not mod:
 		if e.echo: return

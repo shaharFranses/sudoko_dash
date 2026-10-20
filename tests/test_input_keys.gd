@@ -90,3 +90,20 @@ func test_ctrl_z_still_undoes():
 	_key(KEY_0 + d, KEY_0 + d)
 	_key(KEY_Z, KEY_Z, false, true)
 	assert_eq(main.board.cells[i], 0)
+
+func test_held_ctrl_z_undoes_once_per_press():
+	var placed = []
+	for k in 3:
+		var i = main.board.cells.find(0)
+		_select(i)
+		_key(KEY_0 + main.board.solution[i], KEY_0 + main.board.solution[i])
+		placed.append(i)
+	_key(KEY_Z, KEY_Z, false, true)          # press
+	for r in 5: _key(KEY_Z, KEY_Z, true, true)   # auto-repeat while held
+	assert_eq(main.board.cells[placed[2]], 0, "first press undid the last entry")
+	assert_ne(main.board.cells[placed[1]], 0, "repeats did not undo more")
+	assert_ne(main.board.cells[placed[0]], 0)
+	_key(KEY_Z, KEY_Z, false, false, true)   # Cmd+Z new press
+	assert_eq(main.board.cells[placed[1]], 0)
+	for r in 3: _key(KEY_Z, KEY_Z, true, false, true)
+	assert_ne(main.board.cells[placed[0]], 0)
