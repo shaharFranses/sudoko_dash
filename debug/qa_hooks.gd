@@ -1,5 +1,5 @@
 ## QA hooks H1-H6 (debug builds only; excluded from the release export).
-## Web: window.SD_DEBUG.{setAdMode(m), setClockOffsetMs(ms), setCoins(n), setTokens(n), resetSecondChanceCap(), dump()}
+## Web: window.SD_DEBUG.{setAdMode(m), setClockOffsetMs(ms), setCoins(n), setTokens(n), resetSecondChanceCap(), startLevel(n 1-20), dump()}
 ##      window.SD_QA (state), window.__adsLog (H2), window.__midgame (H3), window.__sdDump (H5).
 ##      URL ?ads=available|unavailable|error|timeout (H1), ?clock=<offset ms>.
 ## Keys: F6 cycle ad mode, F7 dump state, F8 +25h clock offset.
@@ -26,6 +26,7 @@ func _ready() -> void:
 		"setCoins": func(a): set_coins(int(a[0])),
 		"setTokens": func(a): set_tokens(int(a[0])),
 		"resetSecondChanceCap": func(_a): reset_sc_cap(),
+		"startLevel": func(a): if _main(): _main().start_level(clampi(int(a[0]) - 1, 0, 19)),
 		"dump": func(_a): pass,
 	}
 	for k in defs:
