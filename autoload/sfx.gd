@@ -73,8 +73,11 @@ func _process(delta: float) -> void:
 	if _poll < 0.25: return
 	_poll = 0.0
 	set_reason("hidden", str(JavaScriptBridge.eval("document.hidden ? 'y' : 'n'")) == "y")
+	set_reason("blur", str(JavaScriptBridge.eval("document.hasFocus() ? 'y' : 'n'")) == "n")
 
 func _notification(what: int) -> void:
 	# desktop / mobile fallback
 	if what == NOTIFICATION_APPLICATION_PAUSED: set_reason("hidden", true)
 	elif what == NOTIFICATION_APPLICATION_RESUMED: set_reason("hidden", false)
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT and not OS.has_feature("web"): set_reason("blur", true)
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN and not OS.has_feature("web"): set_reason("blur", false)

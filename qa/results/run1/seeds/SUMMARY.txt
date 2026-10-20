@@ -1,0 +1,7 @@
+size 4 tier 1: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 6 tier 1: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 6 tier 2: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 9 tier 1: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 9 tier 2: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 9 tier 3: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0
+size 9 tier 4: n=200 checker[TOTAL 200/200 PASS] game_grade_or_count_mismatch=0 teach_step_invalid=0

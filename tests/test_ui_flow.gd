@@ -178,20 +178,27 @@ func test_retry_resets_board():
 	assert_eq(main.board.mistakes, 0)
 	assert_null(main.overlay)
 
-func test_full_path_ads_off_and_area_restored_min_stars():
-	Ads.set_mode("mock_unavailable")
-	for g in 15:
-		main.start_path_grid()
-		if main.board.size != 4: _make_mistakes(1)
-		if main.board.size == 9:
-			var i = main.board.cells.find(0)
-			main._on_cell(i)
+func _reveal_one_target():
+	for t in main.targets:
+		if main.board.cells[t] == 0:
+			main.grid_view.selected = t
 			main.profile.tokens = maxi(main.profile.tokens, 1)
 			main._open_hint_panel(); main._pay_hint("reveal", "token")
-		# clear the wrong digit then solve
+			return
+
+func test_full_path_ads_off_min_stars_20_and_area_restored():
+	Ads.set_mode("mock_unavailable")
+	for g in 20:
+		main.start_path_grid()
+		var lv = main.level
+		_make_mistakes(1)
 		for w in main.board.wrong_cells(): main.board.erase(w)
-		_solve_current()
-		assert_eq(main.screen_name, "results")
+		if main.board.mistakes >= 3: main._retry()
+		_reveal_one_target()
+		if main.board != null and main.Obj.is_timed(lv):
+			main.elapsed_ms = int(lv.par_time_s) * 1000 + 1   # over par
+		if main.board != null: _solve_current()
+		assert_eq(main.screen_name, "results", "level %d" % (g + 1))
 		assert_eq(_rewarded_nodes(), [])
 	assert_true(main.profile.path_finished())
 	assert_eq(main.profile.stars_earned, 20)
@@ -199,11 +206,11 @@ func test_full_path_ads_off_and_area_restored_min_stars():
 	assert_eq(main.screen_name, "restored")
 	for e in Ads.call_log: assert_ne(e.kind, "midgame")
 
-func test_perfect_path_31_stars():
-	for g in 15:
+func test_perfect_path_60_stars():
+	for g in 20:
 		main.start_path_grid()
 		_solve_current()
-	assert_eq(main.profile.stars_earned, 31)
+	assert_eq(main.profile.stars_earned, 60)
 
 func test_no_midgame_while_grid_open_and_never_both_on_results():
 	main.policy.session_start_ms = -10 * 60 * 1000

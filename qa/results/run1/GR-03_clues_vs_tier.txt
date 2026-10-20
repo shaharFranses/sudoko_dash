@@ -1,0 +1,4 @@
+9x9 t1: clues min=23 median=26.0 max=29
+9x9 t2: clues min=21 median=25.0 max=28
+9x9 t3: clues min=22 median=24.0 max=28
+9x9 t4: clues min=21 median=25.0 max=28

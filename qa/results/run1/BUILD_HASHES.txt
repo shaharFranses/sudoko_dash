@@ -1,0 +1,8 @@
+build/web/index.pck mtime=2026-10-20 11:33:29 IDT size=3737424 sha256=65f80dec14421a5cbd41e19e8737af08c83cddf297f9c17073e1ea5c6d9bcbfc
+build/web/index.wasm mtime=2026-10-20 11:33:30 IDT size=43016933 sha256=20bbe3d6bd8f1197b59335c4263b126ac435e8c8c74fa063227121e27210723a
+build/web/index.js mtime=2026-10-20 11:33:29 IDT size=299462 sha256=b91919adea3cdc44435838efeb052bc0f0390dc8e65cb2a754502f18d98a368c
+build/web/index.html mtime=2026-10-20 11:33:30 IDT size=6933 sha256=d8b2957fd01cfd61368aae98f8741ae0568e92fca5ed97978e96b4310ae9f50c
+build/web-release/index.pck mtime=2026-10-20 11:33:34 IDT size=3737488 sha256=a53ebec2192fd9f3e3345034fe7cfec99e9389ba0d8ef30e5dca14ef309073e7
+build/web-release/index.wasm mtime=2026-10-20 11:33:34 IDT size=35376909 sha256=fe5cebc590758c10bc4469be5a591e28edbde5ec8f458f21baeb83db50d028b9
+build/web-release/index.js mtime=2026-10-20 11:33:34 IDT size=331495 sha256=8b649683883a8be172e229a0479503d50cd5245ebf87aa71fda70bf720824075
+build/web-release/index.html mtime=2026-10-20 11:33:34 IDT size=6933 sha256=61721db64d42502097b67bf2cb90c5fdbecf92d8edf3b50c7ccd37d9483a157d

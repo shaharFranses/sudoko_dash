@@ -1,0 +1,34 @@
+# Release debug-hook audit (build/web-release, sha256 in BUILD_HASHES.txt)
+## raw files index.js / index.html / index.pck
+-- build/web-release/index.js
+      5 F6
+     79 F8
+      4 ads=
+-- build/web-release/index.html
+      2 cgsdk
+-- build/web-release/index.pck
+      1 F6
+      1 F7
+     43 gut
+## decompressed scripts (pck_extract/web-release, .gdc zstd-decoded)
+-- autoload/ads.gdc:       2 __adsLog       1 mock_available       1 mock_error       1 mock_timeout       1 mock_unavailable 
+-- autoload/dbg.gdc:       1 QA hooks       1 SD_DEBUG       3 SD_QA       2 URLSearchParams       1 __midgame       1 __sdDump       1 genLog       2 stepDump 
+## is_debug_build gating (source at 05a922d)
+autoload/dbg.gd:1:## QA debug hooks (G6). Active only in debug builds (OS.is_debug_build()); inert in release exports.
+autoload/dbg.gd:13:	enabled = OS.is_debug_build()
+autoload/dbg.gd:14:	if not enabled: return
+autoload/dbg.gd:49:	if not enabled: return
+autoload/dbg.gd:55:	if not enabled or not (e is InputEventKey) or not e.pressed: return
+autoload/ads.gd:50:	if OS.is_debug_build() and OS.has_feature("web"):   # H2
+## who calls Ads.set_mode outside dbg
+## template check
+web wasm 43016933 bytes
+web-release wasm 35376909 bytes
+## pck listing (release) of non-game files
+       210 res://build/web-release/index.apple-touch-icon.png.import
+       199 res://build/web-release/index.icon.png.import
+       193 res://build/web-release/index.png.import
+       211 res://build/web/index.apple-touch-icon.png.import
+       199 res://build/web/index.icon.png.import
+       194 res://build/web/index.png.import
+    120157 res://data/test_vectors.json

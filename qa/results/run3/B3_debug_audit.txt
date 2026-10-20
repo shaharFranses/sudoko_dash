@@ -1,0 +1,13 @@
+# B3 audit build/web-release
+## suspicious files in release pck
+       192 res://assets/branding/icon.png.import
+       195 res://assets/branding/splash.png.import
+## raw grep release pck/js/html
+-- build/web-release/index.pck: 0 hits
+-- build/web-release/index.js: 0 hits
+-- build/web-release/index.html: 0 hits
+## decompressed release scripts (hits)
+      1 autoload/ads.gdc:ads_mock
+      1 autoload/dbg.gdc:qa_hooks
+## control: debug build hits
+17

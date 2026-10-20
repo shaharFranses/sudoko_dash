@@ -47,7 +47,8 @@ static func _mk(tech: String, cells: Array, value: int, elims: Array, ui: int, t
 
 ## Returns the easiest available step with tier <= max_tier, {} if stuck,
 ## or {"technique":"contradiction"} if the board is broken.
-static func find_step(shape, g: Array, cand: Array, max_tier: int = 4) -> Dictionary:
+## tg: optional target-cell set {cell: true}; when non-empty only steps touching it are returned.
+static func find_step(shape, g: Array, cand: Array, max_tier: int = 4, tg: Dictionary = {}) -> Dictionary:
 	var n: int = shape.size
 	# Tier 1: naked single
 	for i in shape.cells:
@@ -55,7 +56,8 @@ static func find_step(shape, g: Array, cand: Array, max_tier: int = 4) -> Dictio
 			if cand[i] == 0: return {"technique": "contradiction", "cells": [i]}
 			if Shape.popcount(cand[i]) == 1:
 				var d = Shape.first_digit(cand[i])
-				return _mk("naked_single", [i], d, [], -1, "%d is the only digit that fits this cell." % d)
+				var _st = _mk("naked_single", [i], d, [], -1, "%d is the only digit that fits this cell." % d)
+				if _touches(_st, tg): return _st
 	if max_tier < 2: return {}
 	# Tier 2: hidden single (boxes first, as players scan boxes)
 	var order = []
@@ -77,23 +79,24 @@ static func find_step(shape, g: Array, cand: Array, max_tier: int = 4) -> Dictio
 					pos = c
 			if cnt == 0: return {"technique": "contradiction", "cells": u.duplicate()}
 			if cnt == 1:
-				return _mk("hidden_single", [pos], d, [], ui, "%d can only go here in this %s." % [d, unit_kind(shape, ui)])
+				var _st = _mk("hidden_single", [pos], d, [], ui, "%d can only go here in this %s." % [d, unit_kind(shape, ui)])
+				if _touches(_st, tg): return _st
 	if max_tier < 3: return {}
 	var s: Dictionary
-	s = _naked_subset(shape, g, cand, 2)
+	s = _naked_subset(shape, g, cand, 2, tg)
 	if s: return s
-	s = _hidden_subset(shape, g, cand, 2)
+	s = _hidden_subset(shape, g, cand, 2, tg)
 	if s: return s
-	s = _pointing(shape, g, cand)
+	s = _pointing(shape, g, cand, tg)
 	if s: return s
 	if max_tier < 4: return {}
-	s = _box_line(shape, g, cand)
+	s = _box_line(shape, g, cand, tg)
 	if s: return s
-	s = _naked_subset(shape, g, cand, 3)
+	s = _naked_subset(shape, g, cand, 3, tg)
 	if s: return s
-	s = _hidden_subset(shape, g, cand, 3)
+	s = _hidden_subset(shape, g, cand, 3, tg)
 	if s: return s
-	s = _x_wing(shape, g, cand)
+	s = _x_wing(shape, g, cand, tg)
 	if s: return s
 	return {}
 
@@ -109,7 +112,7 @@ static func _combos(items: Array, k: int) -> Array:
 				for c in range(b + 1, m): out.append([items[a], items[b], items[c]])
 	return out
 
-static func _naked_subset(shape, g: Array, cand: Array, k: int) -> Dictionary:
+static func _naked_subset(shape, g: Array, cand: Array, k: int, tg: Dictionary = {}) -> Dictionary:
 	var tech = "naked_pair" if k == 2 else "naked_triple"
 	for ui in shape.units.size():
 		var u: Array = shape.units[ui]
@@ -127,10 +130,11 @@ static func _naked_subset(shape, g: Array, cand: Array, k: int) -> Dictionary:
 				if g[c] == 0 and not combo.has(c) and (cand[c] & un):
 					for d in Shape.digits(cand[c] & un): el.append([c, d])
 			if el.size() > 0:
-				return _mk(tech, combo, 0, el, ui, "digits %s are locked into these cells, so remove them elsewhere in this %s." % [_dl(Shape.digits(un)), unit_kind(shape, ui)])
+				var _st = _mk(tech, combo, 0, el, ui, "digits %s are locked into these cells, so remove them elsewhere in this %s." % [_dl(Shape.digits(un)), unit_kind(shape, ui)])
+				if _touches(_st, tg): return _st
 	return {}
 
-static func _hidden_subset(shape, g: Array, cand: Array, k: int) -> Dictionary:
+static func _hidden_subset(shape, g: Array, cand: Array, k: int, tg: Dictionary = {}) -> Dictionary:
 	var tech = "hidden_pair" if k == 2 else "hidden_triple"
 	for ui in shape.units.size():
 		var u: Array = shape.units[ui]
@@ -160,10 +164,11 @@ static func _hidden_subset(shape, g: Array, cand: Array, k: int) -> Dictionary:
 			if el.size() > 0:
 				var cl = cells.keys()
 				cl.sort()
-				return _mk(tech, cl, 0, el, ui, "digits %s can only go in these cells of this %s, so other candidates there are removed." % [_dl(combo), unit_kind(shape, ui)])
+				var _st = _mk(tech, cl, 0, el, ui, "digits %s can only go in these cells of this %s, so other candidates there are removed." % [_dl(combo), unit_kind(shape, ui)])
+				if _touches(_st, tg): return _st
 	return {}
 
-static func _pointing(shape, g: Array, cand: Array) -> Dictionary:
+static func _pointing(shape, g: Array, cand: Array, tg: Dictionary = {}) -> Dictionary:
 	var n: int = shape.size
 	for bi in n:
 		var ui = 2 * n + bi
@@ -184,10 +189,11 @@ static func _pointing(shape, g: Array, cand: Array) -> Dictionary:
 				for c in shape.units[key]:
 					if not u.has(c) and (cand[c] & b): el.append([c, d])
 				if el.size() > 0:
-					return _mk("pointing", p, d, el, ui, "in this box %d must be in %s, so remove %d from the rest of that %s." % [d, unit_label(shape, key), d, unit_kind(shape, key)])
+					var _st = _mk("pointing", p, d, el, ui, "in this box %d must be in %s, so remove %d from the rest of that %s." % [d, unit_label(shape, key), d, unit_kind(shape, key)])
+					if _touches(_st, tg): return _st
 	return {}
 
-static func _box_line(shape, g: Array, cand: Array) -> Dictionary:
+static func _box_line(shape, g: Array, cand: Array, tg: Dictionary = {}) -> Dictionary:
 	var n: int = shape.size
 	for ui in 2 * n:
 		var u: Array = shape.units[ui]
@@ -206,10 +212,11 @@ static func _box_line(shape, g: Array, cand: Array) -> Dictionary:
 			for c in shape.units[bx]:
 				if not u.has(c) and (cand[c] & b): el.append([c, d])
 			if el.size() > 0:
-				return _mk("box_line_reduction", p, d, el, ui, "in this %s %d must be in %s, so remove %d from the rest of that box." % [unit_kind(shape, ui), d, unit_label(shape, bx), d])
+				var _st = _mk("box_line_reduction", p, d, el, ui, "in this %s %d must be in %s, so remove %d from the rest of that box." % [unit_kind(shape, ui), d, unit_label(shape, bx), d])
+				if _touches(_st, tg): return _st
 	return {}
 
-static func _x_wing(shape, g: Array, cand: Array) -> Dictionary:
+static func _x_wing(shape, g: Array, cand: Array, tg: Dictionary = {}) -> Dictionary:
 	var n: int = shape.size
 	for d in range(1, n + 1):
 		var b = 1 << (d - 1)
@@ -235,7 +242,8 @@ static func _x_wing(shape, g: Array, cand: Array) -> Dictionary:
 							if not corners.has(c) and (cand[c] & b): el.append([c, d])
 					if el.size() > 0:
 						corners.sort()
-						return _mk("x_wing", corners, d, el, -1, "%d forms a rectangle in two %ss, so remove %d from the rest of those %ss." % [d, "row" if base == 0 else "column", d, "column" if base == 0 else "row"])
+						var _st = _mk("x_wing", corners, d, el, -1, "%d forms a rectangle in two %ss, so remove %d from the rest of those %ss." % [d, "row" if base == 0 else "column", d, "column" if base == 0 else "row"])
+						if _touches(_st, tg): return _st
 	return {}
 
 static func _dl(ds: Array) -> String:
@@ -276,3 +284,11 @@ static func run(shape, givens: Array, max_tier: int = 4, record: bool = true) ->
 		tier = maxi(tier, s.tier)
 		if record: steps.append(s)
 	return {"solved": true, "tier": tier, "steps": steps, "grid": g}
+
+## True if tg is empty, or the step places into a target cell, or eliminates from one.
+static func _touches(st: Dictionary, tg: Dictionary) -> bool:
+	if tg.is_empty(): return true
+	if is_placement(st): return tg.has(st.cells[0])
+	for e in st.eliminations:
+		if tg.has(e[0]): return true
+	return false

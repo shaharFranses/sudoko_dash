@@ -1,0 +1,5 @@
+build/web-release/index.html (3f2a0b4):
+- user-select:none (+ -webkit/-moz/-ms) on html, body, canvas: line 133. PASS
+- -webkit-touch-callout:none: line 134 (also tap-highlight transparent, touch-action:none). PASS
+- contextmenu: document.addEventListener('contextmenu', e => e.preventDefault(), true): line 139. PASS
+- favicon: <link rel="icon" href="index.icon.png"> 256x256 PNG; apple-touch-icon 180x180 PNG; splash <img id="status-splash" src="index.png"> 640x360 PNG (grid logo on #bfe3ef). Boot splash/bg also set in project.godot. All files exist in build/web-release. PASS (placeholder art; CrazyGames cover/thumbnail art is uploaded separately). Copies: index.png, index.icon.png, index.apple-touch-icon.png in this folder.

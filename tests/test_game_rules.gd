@@ -136,34 +136,40 @@ func test_sc_rollback_with_one_use_is_capped_until_plus24h():
 
 func test_path_star_min_and_max():
 	var lo = Profile.new(); var hi = Profile.new()
-	for i in Profile.PATH.size():
-		var sz = Profile.PATH[i][0]
-		lo.complete_grid("path", sz, i, true, true)
-		hi.complete_grid("path", sz, i, false, false)
+	var n = Profile.path_length()
+	assert_eq(n, 20)
+	for i in n:
+		var sz = int(preload("res://game/levels.gd").level(i).size)
+		lo.complete_level(i, sz, 1)
+		hi.complete_level(i, sz, 3)
 	assert_eq(lo.stars_earned, 20)
-	assert_eq(hi.stars_earned, 31)
+	assert_eq(hi.stars_earned, 60)
 	assert_true(lo.path_finished())
 
-func test_tasks_cost_20_and_min_path_buys_all():
+func test_tasks_cost_20_unlock_in_order_and_min_path_buys_all():
 	var total = 0
 	for t in Profile.TASKS: total += t.cost
 	assert_eq(total, 20)
 	var p = Profile.new()
-	for i in Profile.PATH.size(): p.complete_grid("path", Profile.PATH[i][0], i, true, true)
+	for i in Profile.path_length(): p.complete_level(i, 4, 1)
+	assert_false(p.buy_task("boats"), "locked until dock bought")
 	for t in Profile.TASKS: assert_true(p.buy_task(t.id))
 	assert_true(p.area_restored())
+	assert_eq(p.stars, 0)
 
 func test_stars_only_first_completion_and_quick_coins_only():
 	var p = Profile.new()
-	p.complete_grid("path", 4, 0, false, false)
-	var r = p.complete_grid("path", 4, 0, false, false)
-	assert_eq(r.stars, 0)
+	p.complete_level(0, 4, 2)
+	var r = p.complete_level(0, 4, 3)
+	assert_eq(r.stars, 0, "replay awards no stars")
+	assert_eq(p.level_best[0], 3, "best kept")
+	assert_eq(p.stars_earned, 2)
 	r = p.complete_grid("quick", 6, -1, false, false)
 	assert_eq(r.stars, 0); assert_eq(r.coins, 20)
 
 func test_profile_roundtrip():
 	var p = Profile.new()
-	p.complete_grid("path", 4, 0, false, false); p.record_second_chance(123)
+	p.complete_level(0, 4, 3); p.record_second_chance(123)
 	p.stars = 9; p.buy_task("dock"); p.set_decor("dock", 2)
 	var q = Profile.new(); q.from_dict(JSON.parse_string(JSON.stringify(p.to_dict())))
 	assert_eq(JSON.stringify(q.to_dict()), JSON.stringify(p.to_dict()))

@@ -1,0 +1,9 @@
+ui/main.gd _unhandled_input @054dd29:
+- Digits by physical_keycode KEY_1..9 (top row, so AZERTY works) or KP_1..9 (physical or logical). PASS
+- Ctrl/Cmd(meta)/Alt + digit ignored; also N and Backspace/Delete ignore modifiers. PASS (Shift isn't blocked, intentionally needed for AZERTY digits.)
+- Key repeat (echo) ignored for digits, N, Backspace/Delete. Arrows still repeat (intended). Ctrl+Z echo is NOT filtered, so holding it repeats undo. Minor; flag if strict.
+- First arrow with no selection selects cell 0 (top-left); otherwise it wraps. PASS
+- Digits above the grid size ignored. PASS
+- GUT tests/test_input_keys.gd: 9 tests pass.
+5) 4x4 label: mistakes_label = "Warm-up: no mistake limit" when max_mistakes == 0 (4x4); 6x6/9x9 show "Mistakes n/3". PASS.
+   Wrong entry: board.place sets r.mistake on all sizes (counter limit only if max_mistakes > 0) -> grid_view.wrong_feedback(i): red flash 0.45 s + horizontal shake, plus Sfx "mistake". Not triggered in notes mode. PASS. GUT tests/test_mistake_feedback.gd (4x4/6x6/9x9, notes) pass.

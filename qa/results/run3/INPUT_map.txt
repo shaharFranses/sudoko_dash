@@ -1,0 +1,8 @@
+Source: ui/main.gd _unhandled_input (lines ~375-400), _on_cell/_on_digit (309-331) at 3f2a0b4 (unchanged in this commit).
+- Arrows: wrap with (c+n-1)%n / (c+1)%n / (r+n-1)%n / (r+1)%n. PASS. Note: with no selection, the first arrow press starts from cell 0 and moves (e.g. Right selects r1c2, not r1c1).
+- Digits: KEY_1..9 and KP_1..9 accepted only when digit <= board.size (4x4 ignores 5-9; 6x6 ignores 7-9). PASS.
+- Backspace and Delete -> _erase (selected, non-overlay). PASS.
+- N -> notes toggle. PASS.
+- Ctrl+Z or Cmd(meta)+Z -> undo. PASS.
+- Tap-number-first: digit with no selection sets digit_lock (pad button toggled, selection cleared); each tapped cell gets that digit (respects notes mode); same digit again clears the lock; an arrow key clears the lock. PASS.
+Risks (not failures): uses keycode, not physical_keycode, so the AZERTY number row (& é " ' … without Shift) won't enter digits. Modifiers aren't filtered (Ctrl+1 also places 1). Key-repeat echo isn't filtered (holding Ctrl+Z repeats undo).

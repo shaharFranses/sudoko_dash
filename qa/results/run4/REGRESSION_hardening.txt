@@ -1,0 +1,19 @@
+# run2/run3 hardening intact at 054dd29
+15:var mode: String = "none"       # none | sdk | (debug only) mock modes
+24:	elif OS.is_debug_build() and ResourceLoader.exists(MOCK_PATH):
+38:	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
+114:	Store.loading_stop()
+1  adblock = true, adblockKnown = false
+1  adblockKnown && !adblock && navigator.onLine
+1  SDK.game.loadingStart()
+3  stopPending
+1  user-select: none
+1  -webkit-touch-callout: none
+1  addEventListener('contextmenu'
+1  visibilitychange
+1  addEventListener('blur'
+1  addEventListener('focus'
+4  status-splash
+1  rel="icon"
+81:	ad_started.emit()   # audio muted for the whole ad (CrazyGames requirement)
+101:	ad_finished.emit()

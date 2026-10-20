@@ -1,0 +1,2752 @@
+[
+  {
+    "first_step": {
+      "cells": [
+        5
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 10.297,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      4,
+      0,
+      1
+    ],
+    "requested_tier": 1,
+    "seed": 3000,
+    "size": 4,
+    "solution": [
+      4,
+      2,
+      1,
+      3,
+      1,
+      3,
+      2,
+      4,
+      3,
+      1,
+      4,
+      2,
+      2,
+      4,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.459,
+    "givens": [
+      0,
+      0,
+      0,
+      3,
+      0,
+      4,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3001,
+    "size": 4,
+    "solution": [
+      2,
+      1,
+      4,
+      3,
+      3,
+      4,
+      1,
+      2,
+      1,
+      3,
+      2,
+      4,
+      4,
+      2,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        5
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 5.925,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      3
+    ],
+    "requested_tier": 1,
+    "seed": 3002,
+    "size": 4,
+    "solution": [
+      1,
+      2,
+      3,
+      4,
+      4,
+      3,
+      2,
+      1,
+      3,
+      4,
+      1,
+      2,
+      2,
+      1,
+      4,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        8
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.094,
+    "givens": [
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0,
+      0,
+      2,
+      0,
+      1,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3003,
+    "size": 4,
+    "solution": [
+      3,
+      2,
+      4,
+      1,
+      1,
+      4,
+      3,
+      2,
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      1,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        6
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.326,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      3,
+      2,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3004,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      1,
+      4,
+      4,
+      3,
+      2,
+      1,
+      2,
+      1,
+      4,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        2
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.046,
+    "givens": [
+      0,
+      4,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3005,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      4,
+      1,
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      1,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.037,
+    "givens": [
+      1,
+      0,
+      0,
+      0,
+      4,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3006,
+    "size": 4,
+    "solution": [
+      1,
+      2,
+      3,
+      4,
+      4,
+      3,
+      2,
+      1,
+      2,
+      1,
+      4,
+      3,
+      3,
+      4,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.146,
+    "givens": [
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      2,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3007,
+    "size": 4,
+    "solution": [
+      2,
+      4,
+      3,
+      1,
+      1,
+      3,
+      4,
+      2,
+      4,
+      1,
+      2,
+      3,
+      3,
+      2,
+      1,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.034,
+    "givens": [
+      0,
+      0,
+      3,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3008,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      1,
+      4,
+      2,
+      1,
+      4,
+      3,
+      4,
+      3,
+      2,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        2
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.217,
+    "givens": [
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3009,
+    "size": 4,
+    "solution": [
+      2,
+      3,
+      1,
+      4,
+      1,
+      4,
+      2,
+      3,
+      4,
+      1,
+      3,
+      2,
+      3,
+      2,
+      4,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        10
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.4,
+    "givens": [
+      3,
+      0,
+      4,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3
+    ],
+    "requested_tier": 1,
+    "seed": 3010,
+    "size": 4,
+    "solution": [
+      3,
+      1,
+      4,
+      2,
+      2,
+      4,
+      3,
+      1,
+      1,
+      3,
+      2,
+      4,
+      4,
+      2,
+      1,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        5
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.176,
+    "givens": [
+      0,
+      0,
+      0,
+      4,
+      4,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      1,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3011,
+    "size": 4,
+    "solution": [
+      1,
+      2,
+      3,
+      4,
+      4,
+      3,
+      2,
+      1,
+      3,
+      4,
+      1,
+      2,
+      2,
+      1,
+      4,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        9
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.148,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      2,
+      0,
+      0,
+      1,
+      4,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3012,
+    "size": 4,
+    "solution": [
+      3,
+      2,
+      1,
+      4,
+      1,
+      4,
+      2,
+      3,
+      2,
+      3,
+      4,
+      1,
+      4,
+      1,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.21,
+    "givens": [
+      0,
+      0,
+      4,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3013,
+    "size": 4,
+    "solution": [
+      1,
+      3,
+      4,
+      2,
+      4,
+      2,
+      1,
+      3,
+      3,
+      4,
+      2,
+      1,
+      2,
+      1,
+      3,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        11
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.116,
+    "givens": [
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3014,
+    "size": 4,
+    "solution": [
+      4,
+      2,
+      1,
+      3,
+      1,
+      3,
+      2,
+      4,
+      3,
+      1,
+      4,
+      2,
+      2,
+      4,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.85,
+    "givens": [
+      0,
+      0,
+      0,
+      1,
+      4,
+      0,
+      0,
+      3,
+      0,
+      4,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3015,
+    "size": 4,
+    "solution": [
+      2,
+      3,
+      4,
+      1,
+      4,
+      1,
+      2,
+      3,
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      1,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.169,
+    "givens": [
+      0,
+      4,
+      2,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      4
+    ],
+    "requested_tier": 1,
+    "seed": 3016,
+    "size": 4,
+    "solution": [
+      3,
+      4,
+      2,
+      1,
+      1,
+      2,
+      4,
+      3,
+      4,
+      3,
+      1,
+      2,
+      2,
+      1,
+      3,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.208,
+    "givens": [
+      2,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3017,
+    "size": 4,
+    "solution": [
+      2,
+      4,
+      1,
+      3,
+      3,
+      1,
+      4,
+      2,
+      1,
+      3,
+      2,
+      4,
+      4,
+      2,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        8
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 2.434,
+    "givens": [
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3018,
+    "size": 4,
+    "solution": [
+      3,
+      2,
+      4,
+      1,
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      1,
+      4,
+      1,
+      4,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.202,
+    "givens": [
+      0,
+      0,
+      0,
+      4,
+      2,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3019,
+    "size": 4,
+    "solution": [
+      1,
+      3,
+      2,
+      4,
+      2,
+      4,
+      1,
+      3,
+      3,
+      1,
+      4,
+      2,
+      4,
+      2,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        8
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.868,
+    "givens": [
+      0,
+      0,
+      0,
+      4,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      1,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3020,
+    "size": 4,
+    "solution": [
+      3,
+      1,
+      2,
+      4,
+      4,
+      2,
+      3,
+      1,
+      2,
+      4,
+      1,
+      3,
+      1,
+      3,
+      4,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        4
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.148,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      1,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3021,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      2,
+      3,
+      4,
+      1,
+      3,
+      1,
+      2,
+      4,
+      4,
+      2,
+      1,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        2
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.195,
+    "givens": [
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3022,
+    "size": 4,
+    "solution": [
+      2,
+      4,
+      3,
+      1,
+      3,
+      1,
+      4,
+      2,
+      4,
+      2,
+      1,
+      3,
+      1,
+      3,
+      2,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        6
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.091,
+    "givens": [
+      0,
+      0,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3023,
+    "size": 4,
+    "solution": [
+      4,
+      3,
+      1,
+      2,
+      1,
+      2,
+      4,
+      3,
+      2,
+      4,
+      3,
+      1,
+      3,
+      1,
+      2,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.134,
+    "givens": [
+      2,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      2
+    ],
+    "requested_tier": 1,
+    "seed": 3024,
+    "size": 4,
+    "solution": [
+      2,
+      3,
+      1,
+      4,
+      4,
+      1,
+      2,
+      3,
+      3,
+      2,
+      4,
+      1,
+      1,
+      4,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.039,
+    "givens": [
+      0,
+      3,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3025,
+    "size": 4,
+    "solution": [
+      4,
+      3,
+      2,
+      1,
+      1,
+      2,
+      3,
+      4,
+      2,
+      4,
+      1,
+      3,
+      3,
+      1,
+      4,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        7
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.158,
+    "givens": [
+      0,
+      2,
+      0,
+      0,
+      0,
+      4,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ],
+    "requested_tier": 1,
+    "seed": 3026,
+    "size": 4,
+    "solution": [
+      1,
+      2,
+      3,
+      4,
+      3,
+      4,
+      2,
+      1,
+      4,
+      3,
+      1,
+      2,
+      2,
+      1,
+      4,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        1
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.202,
+    "givens": [
+      3,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      4,
+      0,
+      3
+    ],
+    "requested_tier": 1,
+    "seed": 3027,
+    "size": 4,
+    "solution": [
+      3,
+      1,
+      4,
+      2,
+      4,
+      2,
+      3,
+      1,
+      1,
+      3,
+      2,
+      4,
+      2,
+      4,
+      1,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.068,
+    "givens": [
+      0,
+      0,
+      0,
+      2,
+      0,
+      4,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3028,
+    "size": 4,
+    "solution": [
+      1,
+      3,
+      4,
+      2,
+      2,
+      4,
+      1,
+      3,
+      4,
+      2,
+      3,
+      1,
+      3,
+      1,
+      2,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.161,
+    "givens": [
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "requested_tier": 1,
+    "seed": 3029,
+    "size": 4,
+    "solution": [
+      3,
+      4,
+      1,
+      2,
+      2,
+      1,
+      3,
+      4,
+      1,
+      2,
+      4,
+      3,
+      4,
+      3,
+      2,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.14,
+    "givens": [
+      0,
+      3,
+      0,
+      0,
+      0,
+      2,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      2
+    ],
+    "requested_tier": 1,
+    "seed": 3030,
+    "size": 4,
+    "solution": [
+      4,
+      3,
+      2,
+      1,
+      1,
+      2,
+      3,
+      4,
+      2,
+      1,
+      4,
+      3,
+      3,
+      4,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        9
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.417,
+    "givens": [
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      4,
+      0,
+      2,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3031,
+    "size": 4,
+    "solution": [
+      1,
+      3,
+      2,
+      4,
+      4,
+      2,
+      1,
+      3,
+      3,
+      1,
+      4,
+      2,
+      2,
+      4,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        2
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.148,
+    "givens": [
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      2,
+      1,
+      0,
+      2,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3032,
+    "size": 4,
+    "solution": [
+      2,
+      1,
+      3,
+      4,
+      3,
+      4,
+      2,
+      1,
+      1,
+      2,
+      4,
+      3,
+      4,
+      3,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        10
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.497,
+    "givens": [
+      0,
+      0,
+      3,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4
+    ],
+    "requested_tier": 1,
+    "seed": 3033,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      4,
+      1,
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      1,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        8
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.229,
+    "givens": [
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3034,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      2,
+      3,
+      3,
+      2,
+      1,
+      4,
+      2,
+      3,
+      4,
+      1,
+      4,
+      1,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.538,
+    "givens": [
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      4,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3035,
+    "size": 4,
+    "solution": [
+      4,
+      2,
+      3,
+      1,
+      1,
+      3,
+      2,
+      4,
+      3,
+      4,
+      1,
+      2,
+      2,
+      1,
+      4,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.3,
+    "givens": [
+      1,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      2
+    ],
+    "requested_tier": 1,
+    "seed": 3036,
+    "size": 4,
+    "solution": [
+      1,
+      2,
+      4,
+      3,
+      4,
+      3,
+      2,
+      1,
+      2,
+      1,
+      3,
+      4,
+      3,
+      4,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        6
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.223,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      2,
+      3,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      2,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3037,
+    "size": 4,
+    "solution": [
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      4,
+      1,
+      3,
+      4,
+      1,
+      2,
+      1,
+      2,
+      3,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.124,
+    "givens": [
+      0,
+      4,
+      0,
+      0,
+      1,
+      0,
+      4,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3038,
+    "size": 4,
+    "solution": [
+      3,
+      4,
+      2,
+      1,
+      1,
+      2,
+      4,
+      3,
+      2,
+      1,
+      3,
+      4,
+      4,
+      3,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        2
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.301,
+    "givens": [
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      4,
+      0,
+      4,
+      0,
+      0,
+      3
+    ],
+    "requested_tier": 1,
+    "seed": 3039,
+    "size": 4,
+    "solution": [
+      3,
+      2,
+      1,
+      4,
+      1,
+      4,
+      3,
+      2,
+      2,
+      3,
+      4,
+      1,
+      4,
+      1,
+      2,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        7
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.315,
+    "givens": [
+      2,
+      0,
+      0,
+      0,
+      3,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "requested_tier": 1,
+    "seed": 3040,
+    "size": 4,
+    "solution": [
+      2,
+      4,
+      1,
+      3,
+      3,
+      1,
+      2,
+      4,
+      1,
+      3,
+      4,
+      2,
+      4,
+      2,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        6
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 1
+    },
+    "gen_ms": 1.212,
+    "givens": [
+      4,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      3,
+      0,
+      4,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3041,
+    "size": 4,
+    "solution": [
+      4,
+      1,
+      3,
+      2,
+      2,
+      3,
+      1,
+      4,
+      1,
+      4,
+      2,
+      3,
+      3,
+      2,
+      4,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        8
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.346,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      4,
+      3,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3042,
+    "size": 4,
+    "solution": [
+      4,
+      1,
+      2,
+      3,
+      3,
+      2,
+      4,
+      1,
+      2,
+      3,
+      1,
+      4,
+      1,
+      4,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        4
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.046,
+    "givens": [
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      2,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3043,
+    "size": 4,
+    "solution": [
+      1,
+      4,
+      3,
+      2,
+      3,
+      2,
+      4,
+      1,
+      2,
+      3,
+      1,
+      4,
+      4,
+      1,
+      2,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        5
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.041,
+    "givens": [
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    "requested_tier": 1,
+    "seed": 3044,
+    "size": 4,
+    "solution": [
+      4,
+      2,
+      3,
+      1,
+      1,
+      3,
+      2,
+      4,
+      2,
+      1,
+      4,
+      3,
+      3,
+      4,
+      1,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        0
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 2.394,
+    "givens": [
+      0,
+      0,
+      2,
+      0,
+      4,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3045,
+    "size": 4,
+    "solution": [
+      3,
+      1,
+      2,
+      4,
+      4,
+      2,
+      1,
+      3,
+      1,
+      3,
+      4,
+      2,
+      2,
+      4,
+      3,
+      1
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        9
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 2
+    },
+    "gen_ms": 1.566,
+    "givens": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      2
+    ],
+    "requested_tier": 1,
+    "seed": 3046,
+    "size": 4,
+    "solution": [
+      3,
+      1,
+      2,
+      4,
+      2,
+      4,
+      1,
+      3,
+      4,
+      2,
+      3,
+      1,
+      1,
+      3,
+      4,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        3
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 4
+    },
+    "gen_ms": 1.651,
+    "givens": [
+      2,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3047,
+    "size": 4,
+    "solution": [
+      2,
+      1,
+      3,
+      4,
+      4,
+      3,
+      1,
+      2,
+      3,
+      2,
+      4,
+      1,
+      1,
+      4,
+      2,
+      3
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        5
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 2.172,
+    "givens": [
+      0,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      1,
+      0,
+      0,
+      4,
+      0,
+      0
+    ],
+    "requested_tier": 1,
+    "seed": 3048,
+    "size": 4,
+    "solution": [
+      4,
+      1,
+      2,
+      3,
+      2,
+      3,
+      4,
+      1,
+      3,
+      2,
+      1,
+      4,
+      1,
+      4,
+      3,
+      2
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  },
+  {
+    "first_step": {
+      "cells": [
+        11
+      ],
+      "eliminations": [],
+      "technique": "naked_single",
+      "value": 3
+    },
+    "gen_ms": 1.128,
+    "givens": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4
+    ],
+    "requested_tier": 1,
+    "seed": 3049,
+    "size": 4,
+    "solution": [
+      2,
+      4,
+      3,
+      1,
+      3,
+      1,
+      4,
+      2,
+      4,
+      2,
+      1,
+      3,
+      1,
+      3,
+      2,
+      4
+    ],
+    "solution_count": 1,
+    "techniques": [
+      "naked_single"
+    ],
+    "tier": 1
+  }
+]

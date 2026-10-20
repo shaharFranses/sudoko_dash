@@ -1,0 +1,3 @@
+s4_t1.json n=200 median=1.69 p95=1.98 max=3.59 ms (native headless, sequential, 1 other godot proc running)
+s6_t1.json n=200 median=5.60 p95=7.17 max=8.98 ms (native headless, sequential, 1 other godot proc running)
+s6_t2.json n=200 median=17.93 p95=59.68 max=88.76 ms (native headless, sequential, 1 other godot proc running)

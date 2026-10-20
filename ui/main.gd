@@ -8,6 +8,8 @@ const Profile = preload("res://game/profile.gd")
 const AdPolicy = preload("res://game/ad_policy.gd")
 const Source = preload("res://game/puzzle_source.gd")
 const GridView = preload("res://ui/grid_view.gd")
+const Obj = preload("res://game/objectives.gd")
+const Levels = preload("res://game/levels.gd")
 const HarbourView = preload("res://ui/harbour_view.gd")
 
 var profile = Profile.new()
@@ -30,6 +32,14 @@ var classic_tier: int:
 	get: return profile.classic_tier
 	set(v): profile.classic_tier = v
 var results_label: Label = null
+var level: Dictionary = {}        # current path level ({} for quick/classic)
+var targets: Array = []           # target cell indices T
+var elapsed_ms: int = 0           # Beat the Tide timer (Reveal penalties included)
+var continues: int = 0
+var _save_accum: float = 0.0
+var objective_label: Label
+var tide_bar: ProgressBar
+var timer_debug_label: Label
 var last_teach: Dictionary = {}   # checker format: {cell,value} | {eliminations} | {flag}
 
 func _ready() -> void:
@@ -45,7 +55,7 @@ func _ready() -> void:
 
 func save() -> void:
 	if board and screen_name == "grid":
-		profile.current_grid = {"meta": grid_meta, "board": board.to_dict()}
+		profile.current_grid = {"meta": grid_meta, "board": board.to_dict(), "level": {"elapsed_ms": elapsed_ms, "continues": continues}}
 	Store.save(profile.to_dict())
 	Dbg.publish()
 
@@ -140,8 +150,8 @@ func show_harbour() -> void:
 	if profile.current_grid.has("board"):
 		v.add_child(_btn("Resume grid", resume_grid, 28, 72))
 	if not profile.path_finished():
-		var pg = Profile.PATH[profile.path_next]
-		v.add_child(_btn("Path grid %d/15  (%dx%d)" % [profile.path_next + 1, pg[0], pg[0]], start_path_grid, 28, 72))
+		var lv = Levels.level(profile.path_next)
+		v.add_child(_btn("Level %d/%d: %s" % [profile.path_next + 1, Profile.path_length(), Obj.label(lv)], start_path_grid, 24, 72))
 	else:
 		v.add_child(_label("Path complete! Stars earned: %d" % profile.stars_earned, 22))
 	v.add_child(_btn("Quick 6x6", start_quick, 24))
@@ -165,8 +175,8 @@ func show_harbour() -> void:
 			row.add_child(_btn(t.decor[ch], func(): profile.set_decor(id, (ch + 1) % n); save(); show_harbour(), 20, 56))
 		else:
 			var id2 = t.id
-			var b = _btn("Buy (%d stars)" % t.cost, func(): _buy_task(id2), 20, 56)
-			b.disabled = profile.stars < t.cost
+			var b = _btn("Buy (%d stars)" % t.cost if profile.task_unlocked(t.id) else "Locked", func(): _buy_task(id2), 20, 56)
+			b.disabled = profile.stars < t.cost or not profile.task_unlocked(t.id)
 			row.add_child(b)
 		v.add_child(row)
 	if profile.area_restored():
@@ -190,9 +200,25 @@ func show_area_restored() -> void:
 
 # ---------------- grids ----------------
 func start_path_grid() -> void:
-	var i = profile.path_next
-	var pg = Profile.PATH[i]
-	_start({"mode": "path", "path_index": i, "size": pg[0], "tier": pg[1], "seed": 100 + i})
+	start_level(profile.path_next)
+
+## Path level i (0-based). Grid comes from the packs via the level's grid_id.
+func start_level(i: int) -> void:
+	var lv = Levels.level(i)
+	var gr = Levels.grid(lv.grid_id)
+	var pk: String = gr.pack
+	var p = source.from_pack(int(gr.size), int(pk.substr(pk.length() - 1)), int(gr.index))
+	grid_meta = {"mode": "path", "path_index": i, "level": i + 1, "size": int(gr.size), "tier": int(lv.tier), "seed": int(gr.index), "id": p.id}
+	board = Board.new()
+	board.setup(int(gr.size), p.givens, p.solution)
+	_set_level(lv, 0, 0)
+	_enter_grid()
+
+func _set_level(lv: Dictionary, el: int, cont: int) -> void:
+	level = lv
+	targets = Levels.target_cells(lv) if not lv.is_empty() else []
+	elapsed_ms = el
+	continues = cont
 
 func start_quick() -> void:
 	profile.quick_seed += 1
@@ -210,6 +236,7 @@ func _start(meta: Dictionary) -> void:
 	grid_meta = meta
 	board = Board.new()
 	board.setup(meta.size, p.givens, p.solution)
+	_set_level({}, 0, 0)
 	_enter_grid()
 
 func resume_grid() -> void:
@@ -217,6 +244,11 @@ func resume_grid() -> void:
 	grid_meta.size = int(grid_meta.size); grid_meta.tier = int(grid_meta.tier); grid_meta.path_index = int(grid_meta.path_index)
 	board = Board.new()
 	board.from_dict(profile.current_grid.board)
+	var lvd = profile.current_grid.get("level", {})
+	if grid_meta.mode == "path":
+		_set_level(Levels.level(int(grid_meta.path_index)), int(lvd.get("elapsed_ms", 0)), int(lvd.get("continues", 0)))
+	else:
+		_set_level({}, 0, 0)
 	_enter_grid()
 
 func _enter_grid() -> void:
@@ -260,11 +292,31 @@ func _build_grid_screen() -> void:
 	grid_view.size_flags_horizontal = SIZE_EXPAND_FILL
 	grid_view.size_flags_vertical = SIZE_EXPAND_FILL
 	grid_view.cell_tapped.connect(_on_cell)
+	grid_view.target_cells = targets
+	grid_view.lantern_path = []
+	if not level.is_empty():
+		var inner = str(level.params.get("inner", level.objective))
+		if level.objective == "lantern":
+			for rc in level.params.path: grid_view.lantern_path.append(int(rc[0]) * board.size + int(rc[1]))
 	body.add_child(grid_view)
 	var side = VBoxContainer.new()
 	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x, 0 if landscape else min(vp.y * 0.38, 360))
 	side.add_theme_constant_override("separation", 8)
 	body.add_child(side)
+	objective_label = _label("", 22, Color("1d4f73"))
+	objective_label.name = "ObjectiveLabel"
+	side.add_child(objective_label)
+	tide_bar = ProgressBar.new()
+	tide_bar.name = "TideBar"
+	tide_bar.show_percentage = false
+	tide_bar.custom_minimum_size = Vector2(0, 18)
+	tide_bar.visible = not level.is_empty() and Obj.is_timed(level)
+	side.add_child(tide_bar)
+	timer_debug_label = null
+	if Dbg.enabled:   # H7: on-screen timer readout (debug builds only)
+		timer_debug_label = _label("", 16, Color("7a2a2a"))
+		timer_debug_label.name = "TimerDebug"
+		side.add_child(timer_debug_label)
 	teach_label = _label("", 20, Color("6a4b00"))
 	side.add_child(teach_label)
 	var pad = GridContainer.new()
@@ -299,7 +351,37 @@ func _refresh() -> void:
 	mistakes_label.text = ("Mistakes %d/%d" % [board.mistakes, board.max_mistakes]) if board.max_mistakes > 0 else "Warm-up: no mistake limit"
 	notes_btn.text = "Notes: ON" if notes_mode else "Notes: OFF"
 	status_label.text = "Tap a cell then a digit, or a digit then cells. Keys: 1-%d, arrows, Backspace, N, Ctrl+Z" % board.size
+	objective_label.text = Obj.label(level, board.cells, board.solution, targets) if not level.is_empty() else ""
+	_refresh_timer()
 	grid_view.queue_redraw()
+
+func _refresh_timer() -> void:
+	if tide_bar == null or not is_instance_valid(tide_bar) or level.is_empty() or not Obj.is_timed(level): return
+	var par_ms = int(level.par_time_s) * 1000
+	tide_bar.max_value = par_ms
+	tide_bar.value = maxi(0, par_ms - elapsed_ms)
+	tide_bar.modulate = Color(0.6, 0.6, 0.6) if elapsed_ms > par_ms else Color(1, 1, 1)   # calm grey after par
+	if timer_debug_label and is_instance_valid(timer_debug_label):
+		timer_debug_label.text = "[debug] elapsed_ms=%d par_ms=%d" % [elapsed_ms, par_ms]
+
+## Timer runs only on a live timed level: no panel, tab visible, window focused (v1.2 §9.6).
+func timer_running() -> bool:
+	return screen_name == "grid" and board != null and not level.is_empty() and Obj.is_timed(level) \
+		and overlay == null and Ads.context == "grid" and not Sfx.state.reasons.has("hidden") and not Sfx.state.reasons.has("blur")
+
+func _process(delta: float) -> void:
+	if timer_running():
+		elapsed_ms += int(round(delta * 1000.0))
+		_refresh_timer()
+	if screen_name == "grid" and board != null:
+		_save_accum += delta
+		if _save_accum >= 5.0:   # periodic save (at least every 5 s)
+			_save_accum = 0.0
+			save()
+
+func _level_done() -> bool:
+	if level.is_empty(): return board.is_complete()
+	return Obj.complete(board.cells, board.solution, targets)
 
 func _clear_teach() -> void:
 	if grid_view:
@@ -344,7 +426,7 @@ func _apply_digit(i: int, d: int) -> void:
 		var r = board.place(i, d)
 		if r.changed: Sfx.play("mistake" if r.mistake else "place")
 		if r.mistake: grid_view.wrong_feedback(i)
-		if r.changed and board.is_complete():
+		if r.changed and _level_done():
 			save()
 			_complete()
 			return
@@ -502,7 +584,7 @@ func _pay_hint(kind: String, how: String) -> void:
 	_close_overlay()
 	if kind == "teach":
 		var t0 = Time.get_ticks_usec()
-		var s = Sudoku.step(board.correct_board())
+		var s = Sudoku.step_for_targets(board.correct_board(), targets) if not targets.is_empty() else Sudoku.step(board.correct_board())
 		var ms = (Time.get_ticks_usec() - t0) / 1000.0
 		source.log.append({"size": board.size, "source": "step", "ms": ms, "technique": s.get("technique", "")})
 		if s.is_empty():
@@ -519,8 +601,9 @@ func _pay_hint(kind: String, how: String) -> void:
 		print("[SD] teach ", s.technique, " cells=", s.cells, " value=", s.value, " ms=", ms)
 	else:
 		var i = grid_view.selected
-		board.reveal(i)
-		if board.is_complete():
+		if board.reveal(i) and not level.is_empty():
+			elapsed_ms += 15000   # Reveal penalty (v1.2 §9.2)
+		if _level_done():
 			save(); _complete(); return
 	save()
 	grid_view.queue_redraw()
@@ -560,11 +643,14 @@ func _second_chance(how: String) -> void:
 			return
 	profile.record_second_chance(Dbg.now_ms())
 	board.apply_continue()
+	continues += 1   # elapsed time kept
 	save()
 	_close_overlay()
 
 func _retry() -> void:
 	board.retry()
+	elapsed_ms = 0
+	continues = 0
 	save()
 	_close_overlay()
 	_clear_teach()
@@ -572,7 +658,15 @@ func _retry() -> void:
 # ---------------- results ----------------
 func _complete() -> void:
 	Sfx.play("complete")
-	var r = profile.complete_grid(grid_meta.mode, board.size, grid_meta.path_index, board.any_mistake or board.used_continue, board.reveals > 0)
+	var r: Dictionary
+	if not level.is_empty():
+		var st = Obj.stars(level, board.any_mistake or board.used_continue, board.reveals, elapsed_ms)
+		r = profile.complete_level(int(grid_meta.path_index), board.size, st)
+		print("[SD] level %d complete: stars=%d elapsed_ms=%d" % [int(grid_meta.path_index) + 1, st, elapsed_ms])
+	else:
+		r = profile.complete_grid(grid_meta.mode, board.size)
+	level = {}
+	targets = []
 	profile.current_grid = {}
 	policy.on_grid_completed()
 	board = null
@@ -584,7 +678,11 @@ func _show_results(r: Dictionary) -> void:
 	screen_name = "results"
 	_clear()
 	var v = _center_box()
-	v.add_child(_label("Grid complete!", 40))
+	v.add_child(_label("Level complete!" if r.has("level_stars") else "Grid complete!", 40))
+	if r.has("level_stars"):
+		var sl = _label("Stars: %d / 3" % r.level_stars, 30, Color("b8860b"))
+		sl.name = "LevelStars"
+		v.add_child(sl)
 	results_label = _label("+%d coins   +%d stars%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")], 28)
 	results_label.name = "ResultsRewards"
 	results_label.set_meta("r", r)
@@ -627,5 +725,8 @@ func step_dump():
 		var o = []
 		for r in n: o.append(a.slice(r * n, (r + 1) * n))
 		return o
-	return {"size": n, "grid": g2.call(board.cells), "givens": g2.call(board.givens), "solution": g2.call(board.solution),
+	return {"level": grid_meta.get("level", null), "objective": level.get("objective", null), "params": level.get("params", null),
+		"target": targets.map(func(c): return [c / n, c % n]), "elapsed_ms": elapsed_ms, "reveals": board.reveals, "continues": continues,
+		"par_time_s": level.get("par_time_s", null), "timer_running": timer_running(),
+		"size": n, "grid": g2.call(board.cells), "givens": g2.call(board.givens), "solution": g2.call(board.solution),
 		"notes": board.notes, "mistakes": board.mistakes, "undo": board.history, "game_step": last_teach if not last_teach.is_empty() else null}

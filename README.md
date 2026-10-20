@@ -8,3 +8,10 @@
 Tests: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gexit` (also grep output for `SCRIPT ERROR`; GUT counts those as risky, not failures)
 Packs: `tools/build_all_packs.sh` | Seed dump (H6): `godot --headless --path . -s tools/export_puzzles.gd -- size=6 tier=2 seeds=0-99 format=jsonl out=/tmp/x.jsonl`
 Web: `godot --headless --path . --export-release "Web" build/web/index.html` (single-thread, no COOP/COEP)
+
+## Level path (LEVEL_OBJECTIVES_SPEC v1.2)
+- Data: `data/levels/harbour.json` (committed; 20 levels on 12 grids from `data/packs/`).
+- Rebuild (headless, deterministic, validates every level with `Sudoku.analyze_targets`):
+  `godot --headless --path . -s tools/build_levels.gd`
+- Debug hook H7 (debug builds only): on-screen `TimerDebug` readout on Beat the Tide levels; the state dump
+  (`step_dump()` / `window.SD_QA`) includes `level, objective, params, target, elapsed_ms, reveals, continues, par_time_s, timer_running`.

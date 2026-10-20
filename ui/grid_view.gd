@@ -8,6 +8,8 @@ var selected: int = -1
 var teach_cells: Array = []
 var flag_cells: Array = []
 var teach_elims: Array = []
+var target_cells: Array = []
+var lantern_path: Array = []
 var flash_cell: int = -1
 var flash_t: float = 0.0
 var feedback_count: int = 0   # wrong-entry feedback events (tests/QA)
@@ -119,6 +121,19 @@ func _draw() -> void:
 					for el in teach_elims:
 						if el[0] == i and el[1] == dd: nc = C_WRONG
 					draw_string(font, r.position + Vector2((k % cols) * cell_w + (cell_w - ts2.x) / 2.0, (k / cols) * cell_h + (cell_h + font.get_ascent(fs2) - font.get_descent(fs2)) / 2.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, nc)
+	# objective overlay: lantern chain, then target outlines
+	for k in lantern_path.size():
+		var c = lantern_path[k]
+		var ctr = o + Vector2(c % n + 0.5, c / n + 0.5) * cp
+		if k > 0:
+			var p0 = lantern_path[k - 1]
+			draw_line(o + Vector2(p0 % n + 0.5, p0 / n + 0.5) * cp, ctr, Color(0.85, 0.6, 0.1, 0.5), 3.0)
+		var lit = board.cells[c] == board.solution[c]
+		draw_circle(ctr + Vector2(cp * 0.36, -cp * 0.36), cp * 0.09, Color("ffc23a") if lit else Color("8a8f96"))
+	for c in target_cells:
+		if c in lantern_path: continue
+		var rr = Rect2(o + Vector2(c % n, c / n) * cp, Vector2(cp, cp)).grow(-3)
+		draw_rect(rr, Color("e08a1e") if board.cells[c] != board.solution[c] else Color("6bb36b"), false, 2.0)
 	for k in range(n + 1):
 		var thick_v = k % board.shape.box_w == 0
 		var thick_h = k % board.shape.box_h == 0

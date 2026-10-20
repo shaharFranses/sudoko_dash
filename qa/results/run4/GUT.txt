@@ -1,0 +1,625 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+
+[SD][debug] QA hooks enabled (debug build)
+---  GUT  ---
+[1m[INFO]:  [0musing [/home/box/.local/share/godot/app_userdata/Sudoku Dash] for temporary output.
+Godot version:  4.3.0
+GUT version:  9.3.0
+[4m
+
+res://tests/test_ad_failures.gd
+[0m* test_hint_token_ad_error
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.27
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":1131,"ts":1792495825323}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"hint_token","result":"requested","t_ms":1136,"ts":1792495825328}
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"hint_token","result":"error","t_ms":1142,"ts":1792495825334}
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":1617,"ts":1792495825809}
+[33m    [Orphans]:  [0m14 new orphans in test.
+* test_hint_token_ad_timeout
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.24
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":1650,"ts":1792495825842}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_timeout","origin":"hint_token","result":"requested","t_ms":1652,"ts":1792495825844}
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_timeout","origin":"hint_token","result":"timeout","t_ms":1941,"ts":1792495826133}
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":2280,"ts":1792495826472}
+[33m    [Orphans]:  [0m14 new orphans in test.
+* test_hint_token_retry_after_error_then_success
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.57
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":2312,"ts":1792495826504}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"hint_token","result":"requested","t_ms":2315,"ts":1792495826506}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"hint_token","result":"error","t_ms":2316,"ts":1792495826508}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":2319,"ts":1792495826511}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_available","origin":"hint_token","result":"requested","t_ms":2319,"ts":1792495826511}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_available","origin":"hint_token","result":"finished","t_ms":2897,"ts":1792495827089}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":2900,"ts":1792495827092}
+[33m    [Orphans]:  [0m14 new orphans in test.
+* test_second_chance_ad_error
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=9.75
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":2955,"ts":1792495827147}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"second_chance","result":"requested","t_ms":2957,"ts":1792495827149}
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"second_chance","result":"error","t_ms":2963,"ts":1792495827155}
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":3540,"ts":1792495827732}
+[33m    [Orphans]:  [0m11 new orphans in test.
+* test_second_chance_ad_timeout
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=9.92
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":3592,"ts":1792495827784}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_timeout","origin":"second_chance","result":"requested","t_ms":3595,"ts":1792495827787}
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_timeout","origin":"second_chance","result":"timeout","t_ms":3863,"ts":1792495828055}
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":4210,"ts":1792495828402}
+[33m    [Orphans]:  [0m11 new orphans in test.
+* test_second_chance_ad_fail_then_retry_button_works
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.03
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":4257,"ts":1792495828449}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"second_chance","result":"requested","t_ms":4257,"ts":1792495828449}
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"rewarded","mode":"mock_error","origin":"second_chance","result":"error","t_ms":4259,"ts":1792495828451}
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":4262,"ts":1792495828454}
+[33m    [Orphans]:  [0m22 new orphans in test.
+* test_double_coins_ad_error
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.28
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":4287,"ts":1792495828479}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"double_coins","result":"requested","t_ms":4287,"ts":1792495828479}
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"double_coins","result":"error","t_ms":4289,"ts":1792495828481}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":4876,"ts":1792495829068}
+* test_double_coins_ad_timeout
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.25
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":4915,"ts":1792495829107}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"double_coins","result":"requested","t_ms":4915,"ts":1792495829107}
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"double_coins","result":"timeout","t_ms":5200,"ts":1792495829392}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":5539,"ts":1792495829731}
+* test_double_coins_leaving_results_while_pending_is_safe
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.36
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":5582,"ts":1792495829774}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"double_coins","result":"requested","t_ms":5582,"ts":1792495829774}
+[33m    -- Awaiting 1 frame(s) -- 
+[0m[33m    -- Awaiting 0.6 second(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"double_coins","result":"timeout","t_ms":5870,"ts":1792495830062}
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6187,"ts":1792495830379}
+* test_midgame_error_and_timeout_do_not_block
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":6222,"ts":1792495830413}
+[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_error","origin":"results","result":"requested","t_ms":6222,"ts":1792495830414}
+[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_error","origin":"results","result":"error","t_ms":6222,"ts":1792495830414}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":6222,"ts":1792495830414}
+[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_timeout","origin":"results","result":"requested","t_ms":6222,"ts":1792495830414}
+[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_timeout","origin":"results","result":"timeout","t_ms":6518,"ts":1792495830710}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6518,"ts":1792495830710}
+* test_default_timeout_is_8s
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6560,"ts":1792495830752}
+[1m11/11 passed.
+[0m[4m
+
+res://tests/test_audio.gd
+[0m* test_mute_state_any_reason
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6561,"ts":1792495830753}
+* test_mute_reason_idempotent
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6561,"ts":1792495830753}
+* test_master_bus_follows_reasons
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6561,"ts":1792495830753}
+* test_ad_mutes_during_and_restores_after
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":6561,"ts":1792495830753}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"test","result":"requested","t_ms":6561,"ts":1792495830753}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"test","result":"finished","t_ms":7153,"ts":1792495831345}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":7154,"ts":1792495831346}
+* test_ad_error_and_timeout_unmute
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":7160,"ts":1792495831352}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"test","result":"requested","t_ms":7160,"ts":1792495831352}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"test","result":"error","t_ms":7167,"ts":1792495831359}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_timeout","origin":"mock_timeout","result":"set","t_ms":7167,"ts":1792495831359}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"test","result":"requested","t_ms":7167,"ts":1792495831359}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_timeout","origin":"test","result":"timeout","t_ms":7360,"ts":1792495831552}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":7360,"ts":1792495831552}
+* test_ad_end_keeps_hidden_mute
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"test","result":"requested","t_ms":7367,"ts":1792495831559}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"test","result":"finished","t_ms":7960,"ts":1792495832152}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":7960,"ts":1792495832152}
+* test_unavailable_ad_does_not_touch_mute
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_unavailable","origin":"mock_unavailable","result":"set","t_ms":7967,"ts":1792495832159}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_unavailable","origin":"test","result":"unavailable","t_ms":7967,"ts":1792495832159}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":7967,"ts":1792495832159}
+* test_sfx_generated_and_tiny
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":7968,"ts":1792495832160}
+* test_gameplay_sounds_wired
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=5.92
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8011,"ts":1792495832203}
+[33m    [Orphans]:  [0m28 new orphans in test.
+[33m[Orphans]:  [0m27 new orphans in script.
+[1m9/9 passed.
+[0m[4m
+
+res://tests/test_batch2.gd
+[0m* test_b1_undo_does_not_refund_mistake
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8012,"ts":1792495832204}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8028,"ts":1792495832220}
+* test_b1_undo_in_ui_keeps_mistake_count_and_label
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8029,"ts":1792495832221}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=9.55
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8065,"ts":1792495832257}
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_b2_classic_tier_persists_across_reload
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8068,"ts":1792495832260}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8119,"ts":1792495832311}
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_b4_double_coins_updates_label
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8121,"ts":1792495832313}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.61
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"double_coins","result":"requested","t_ms":8171,"ts":1792495832363}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_available","origin":"double_coins","result":"finished","t_ms":8759,"ts":1792495832951}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8759,"ts":1792495832951}
+* test_b4_failed_double_keeps_label
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8766,"ts":1792495832958}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.33
+[SD] results offer = rewarded
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_error","origin":"mock_error","result":"set","t_ms":8802,"ts":1792495832994}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"double_coins","result":"requested","t_ms":8802,"ts":1792495832994}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"mock_error","origin":"double_coins","result":"error","t_ms":8803,"ts":1792495832995}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8803,"ts":1792495832995}
+* test_qa_api_set_coins_tokens_reset_cap
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8804,"ts":1792495832996}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8829,"ts":1792495833021}
+* test_ads_none_mode_never_grants
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8830,"ts":1792495833021}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"none","origin":"none","result":"set","t_ms":8863,"ts":1792495833055}
+[SD][ads] {"context":"results","grid_open":false,"kind":"rewarded","mode":"none","origin":"double_coins","result":"unavailable","t_ms":8863,"ts":1792495833055}
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8863,"ts":1792495833055}
+* test_release_mode_defaults_without_mock
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8864,"ts":1792495833056}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":8907,"ts":1792495833099}
+[1m8/8 passed.
+[0m[4m
+
+res://tests/test_game_rules.gd
+[0m* test_undo_restores_exact_state
+* test_place_clears_peer_notes
+* test_third_mistake_reaches_limit_and_continue
+* test_after_continue_next_three_mistakes_fail
+* test_4x4_has_no_mistake_limit
+* test_retry_restores_givens_and_allowance
+* test_reveal_fills_only_selected_cell
+* test_board_roundtrip
+* test_token_cap_10_all_sources
+* test_coin_hint_never_adds_token
+* test_sc_cap_rolling_24h
+* test_sc_cap_survives_clock_rollback
+* test_sc_rollback_with_one_use_is_capped_until_plus24h
+* test_path_star_min_and_max
+* test_tasks_cost_20_and_min_path_buys_all
+* test_stars_only_first_completion_and_quick_coins_only
+* test_profile_roundtrip
+* test_midgame_policy
+* test_runtime_never_generates_9x9
+[SD][gen] pack size=9 tier=3 index=5 (no runtime generate/grade)
+* test_runtime_source_p95_within_budget
+[SD][timing] generate size=4 tier=1 seed=0 ms=1.11
+[SD][timing] generate size=6 tier=2 seed=1 ms=6.71
+[SD][timing] generate size=6 tier=1 seed=2 ms=5.48
+[SD][timing] generate size=4 tier=1 seed=3 ms=1.10
+[SD][timing] generate size=6 tier=1 seed=4 ms=5.60
+[SD][timing] generate size=6 tier=2 seed=5 ms=6.77
+[SD][timing] generate size=4 tier=1 seed=6 ms=1.15
+[SD][timing] generate size=6 tier=2 seed=7 ms=7.03
+[SD][timing] generate size=6 tier=1 seed=8 ms=5.72
+[SD][timing] generate size=4 tier=1 seed=9 ms=1.13
+[SD][timing] generate size=6 tier=1 seed=10 ms=4.87
+[SD][timing] generate size=6 tier=2 seed=11 ms=13.36
+[SD][timing] generate size=4 tier=1 seed=12 ms=1.13
+[SD][gen] pack size=6 tier=2 index=13 (no runtime generate/grade)
+[SD][timing] generate size=6 tier=1 seed=14 ms=6.12
+[SD][timing] generate size=4 tier=1 seed=15 ms=1.30
+[SD][timing] generate size=6 tier=1 seed=16 ms=5.44
+[SD][gen] pack size=6 tier=2 index=17 (no runtime generate/grade)
+[SD][timing] generate size=4 tier=1 seed=18 ms=1.23
+[SD][timing] generate size=6 tier=2 seed=19 ms=7.50
+[SD][timing] generate size=6 tier=1 seed=20 ms=5.63
+[SD][timing] generate size=4 tier=1 seed=21 ms=1.16
+[SD][timing] generate size=6 tier=1 seed=22 ms=6.35
+[SD][timing] generate size=6 tier=2 seed=23 ms=14.33
+[SD][timing] generate size=4 tier=1 seed=24 ms=1.05
+[SD][timing] generate size=6 tier=2 seed=25 ms=7.07
+[SD][timing] generate size=6 tier=1 seed=26 ms=5.34
+[SD][timing] generate size=4 tier=1 seed=27 ms=1.17
+[SD][timing] generate size=6 tier=1 seed=28 ms=5.16
+[SD][timing] generate size=6 tier=2 seed=29 ms=6.72
+[SD][timing] generate size=4 tier=1 seed=30 ms=1.21
+[SD][timing] generate size=6 tier=2 seed=31 ms=21.02
+[SD][timing] generate size=6 tier=1 seed=32 ms=5.63
+[SD][timing] generate size=4 tier=1 seed=33 ms=1.04
+[SD][timing] generate size=6 tier=1 seed=34 ms=5.45
+[SD][gen] pack size=6 tier=2 index=35 (no runtime generate/grade)
+[SD][timing] generate size=4 tier=1 seed=36 ms=1.19
+[SD][gen] pack size=6 tier=2 index=37 (no runtime generate/grade)
+[SD][timing] generate size=6 tier=1 seed=38 ms=5.25
+[SD][timing] generate size=4 tier=1 seed=39 ms=0.98
+[SD][timing] generate size=6 tier=1 seed=40 ms=5.83
+[SD][timing] generate size=6 tier=2 seed=41 ms=21.20
+[SD][timing] generate size=4 tier=1 seed=42 ms=1.11
+[SD][timing] generate size=6 tier=2 seed=43 ms=7.62
+[SD][timing] generate size=6 tier=1 seed=44 ms=6.31
+[SD][timing] generate size=4 tier=1 seed=45 ms=1.10
+[SD][timing] generate size=6 tier=1 seed=46 ms=5.76
+[SD][timing] generate size=6 tier=2 seed=47 ms=15.25
+[SD][timing] generate size=4 tier=1 seed=48 ms=1.15
+[SD][gen] pack size=6 tier=2 index=49 (no runtime generate/grade)
+[SD][timing] generate size=6 tier=1 seed=50 ms=5.90
+[SD][timing] generate size=4 tier=1 seed=51 ms=1.20
+[SD][timing] generate size=6 tier=1 seed=52 ms=6.56
+[SD][timing] generate size=6 tier=2 seed=53 ms=21.20
+[SD][timing] generate size=4 tier=1 seed=54 ms=1.15
+[SD][timing] generate size=6 tier=2 seed=55 ms=21.82
+[SD][timing] generate size=6 tier=1 seed=56 ms=5.72
+[SD][timing] generate size=4 tier=1 seed=57 ms=1.11
+[SD][timing] generate size=6 tier=1 seed=58 ms=5.89
+[SD][gen] pack size=6 tier=2 index=59 (no runtime generate/grade)
+    runtime 4x4/6x6 get_puzzle p95 = 21.29 ms (native headless)
+[1m20/20 passed.
+[0m[4m
+
+res://tests/test_input_keys.gd
+[0m* test_first_arrow_selects_top_left
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=5.79
+[33m    [Orphans]:  [0m5 new orphans in test.
+* test_first_arrow_any_direction_selects_top_left
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.30
+* test_azerty_top_row_digit_by_physical_key
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=5.81
+* test_numpad_digit
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.37
+* test_ctrl_or_cmd_or_alt_digit_ignored
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=9.11
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_key_repeat_does_not_place_or_toggle
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=9.74
+* test_arrow_repeat_still_moves
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=10.74
+* test_digit_beyond_grid_size_ignored
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=10.11
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_ctrl_z_still_undoes
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=5.98
+[33m[Orphans]:  [0m5 new orphans in script.
+[1m9/9 passed.
+[0m[4m
+
+res://tests/test_mistake_feedback.gd
+[0m* test_label_4x4_warmup
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.31
+* test_label_6x6_and_9x9_counter
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.39
+[SD][gen] pack size=9 tier=1 index=0 (no runtime generate/grade)
+[33m    [Orphans]:  [0m22 new orphans in test.
+* test_4x4_label_unchanged_after_mistakes_and_no_panel
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.17
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_feedback_4x4
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.21
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m* test_feedback_6x6
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.11
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m* test_feedback_9x9
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][gen] pack size=9 tier=1 index=0 (no runtime generate/grade)
+[33m    -- Awaiting 0.6 second(s) -- 
+[0m* test_notes_never_trigger_feedback
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=5.70
+[33m    [Orphans]:  [0m6 new orphans in test.
+[1m7/7 passed.
+[0m[4m
+
+res://tests/test_module.gd
+[0m* test_rng_deterministic
+* test_rng_seeds_differ
+* test_shape_9x9
+* test_shape_6x6_boxes_are_2x3
+* test_shape_4x4
+* test_solve_wiki_unique
+* test_solve_empty_capped_at_2
+* test_solve_conflicting_givens_zero
+* test_solve_full_grid_count_one
+* test_grade_wiki_tier1
+* test_step_naked_single
+* test_step_hidden_single_needs_tier2
+* test_step_contradiction
+* test_generate_deterministic
+* test_generate_different_seeds_differ
+* test_100_seeded_4x4_unique_and_tiered
+* test_100_seeded_6x6_unique_and_tiered
+* test_generation_budget_4x4_6x6_p95_le_30ms
+    4x4 tier-1 raw generate p95 = 1.30 ms (native headless)
+    6x6 tier-1 raw generate p95 = 8.97 ms (native headless)
+* test_steps_are_sound_on_vectors
+* test_module_has_no_engine_node_dependencies
+* test_vectors_file_present_and_sized
+* test_vectors_match_module
+* test_vectors_cover_all_tiers_9x9
+[1m23/23 passed.
+[0m[4m
+
+res://tests/test_packs.gd
+[0m* test_pack_9x9_t1
+* test_pack_9x9_t2
+* test_pack_9x9_t3
+* test_pack_9x9_t4
+* test_fallback_pack_4x4
+* test_fallback_pack_6x6_t1
+* test_fallback_pack_6x6_t2
+* test_9x9_packs_givens_distinct
+* test_step_9x9_le_20ms_on_diverged_boards
+    9x9 step() p95 = 0.14 ms, max = 13.00 ms (native headless)
+[1m9/9 passed.
+[0m[4m
+
+res://tests/test_ui_flow.gd
+[0m* test_boots_to_title_then_harbour
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75528,"ts":1792495899720}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    [Orphans]:  [0m5 new orphans in test.
+* test_hint_opens_panel_pauses_and_no_rewarded_on_live_grid
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75562,"ts":1792495899754}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.21
+* test_input_mouse_and_keyboard_and_undo_exact
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75604,"ts":1792495899796}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.21
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    [Orphans]:  [0m14 new orphans in test.
+* test_teach_matches_step_and_flags_wrong_first
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75673,"ts":1792495899865}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][gen] pack size=9 tier=3 index=0 (no runtime generate/grade)
+[SD][timing] step size=9 ms=0.22
+[SD] teach naked_single cells=[73] value=3 ms=0.222
+[33m    [Orphans]:  [0m28 new orphans in test.
+* test_ads_off_no_rewarded_anywhere_and_coins_path
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75768,"ts":1792495899960}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_unavailable","origin":"mock_unavailable","result":"set","t_ms":75771,"ts":1792495899963}
+[SD][timing] generate size=4 tier=1 seed=100 ms=1.15
+[SD][timing] step size=4 ms=0.05
+[SD] teach naked_single cells=[2] value=1 ms=0.046
+* test_unaffordable_coin_option_disabled_with_need_line
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75778,"ts":1792495899970}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.19
+[33m    [Orphans]:  [0m6 new orphans in test.
+* test_third_mistake_second_chance_once_per_grid
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75795,"ts":1792495899987}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=6.08
+[33m    [Orphans]:  [0m11 new orphans in test.
+* test_sc_capped_after_3_in_24h_and_clock_rollback
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75832,"ts":1792495900024}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=7.35
+* test_retry_resets_board
+[SD][ads] {"context":"grid_panel","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75869,"ts":1792495900061}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=10.26
+[33m    [Orphans]:  [0m3 new orphans in test.
+* test_full_path_ads_off_and_area_restored_min_stars
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":75908,"ts":1792495900100}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_unavailable","origin":"mock_unavailable","result":"set","t_ms":75926,"ts":1792495900118}
+[SD][timing] generate size=4 tier=1 seed=100 ms=1.07
+[SD] results offer = none
+[SD][timing] generate size=4 tier=1 seed=101 ms=1.18
+[SD] results offer = none
+[SD][timing] generate size=4 tier=1 seed=102 ms=1.30
+[SD] results offer = none
+[SD][timing] generate size=4 tier=1 seed=103 ms=1.22
+[SD] results offer = none
+[SD][timing] generate size=6 tier=1 seed=104 ms=6.14
+[SD] results offer = none
+[SD][timing] generate size=6 tier=1 seed=105 ms=5.90
+[SD] results offer = none
+[SD][timing] generate size=6 tier=1 seed=106 ms=6.17
+[SD] results offer = none
+[SD][timing] generate size=6 tier=2 seed=107 ms=7.69
+[SD] results offer = none
+[SD][timing] generate size=6 tier=2 seed=108 ms=25.70
+[SD] results offer = none
+[SD][gen] pack size=6 tier=2 index=9 (no runtime generate/grade)
+[SD] results offer = none
+[SD][gen] pack size=9 tier=2 index=110 (no runtime generate/grade)
+[SD] results offer = none
+[SD][gen] pack size=9 tier=2 index=111 (no runtime generate/grade)
+[SD] results offer = none
+[SD][gen] pack size=9 tier=3 index=112 (no runtime generate/grade)
+[SD] results offer = none
+[SD][gen] pack size=9 tier=3 index=113 (no runtime generate/grade)
+[SD] results offer = none
+[SD][gen] pack size=9 tier=3 index=114 (no runtime generate/grade)
+[SD] results offer = none
+[33m    [Orphans]:  [0m607 new orphans in test.
+* test_perfect_path_31_stars
+[SD][ads] {"context":"menu","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":76940,"ts":1792495901132}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=4 tier=1 seed=100 ms=1.07
+[SD] results offer = rewarded
+[SD][timing] generate size=4 tier=1 seed=101 ms=1.22
+[SD] results offer = rewarded
+[SD][timing] generate size=4 tier=1 seed=102 ms=1.29
+[SD] results offer = rewarded
+[SD][timing] generate size=4 tier=1 seed=103 ms=1.19
+[SD] results offer = rewarded
+[SD][timing] generate size=6 tier=1 seed=104 ms=5.55
+[SD] results offer = rewarded
+[SD][timing] generate size=6 tier=1 seed=105 ms=5.77
+[SD] results offer = rewarded
+[SD][timing] generate size=6 tier=1 seed=106 ms=6.14
+[SD] results offer = rewarded
+[SD][timing] generate size=6 tier=2 seed=107 ms=10.00
+[SD] results offer = rewarded
+[SD][timing] generate size=6 tier=2 seed=108 ms=14.11
+[SD] results offer = rewarded
+[SD][gen] pack size=6 tier=2 index=9 (no runtime generate/grade)
+[SD] results offer = rewarded
+[SD][gen] pack size=9 tier=2 index=110 (no runtime generate/grade)
+[SD] results offer = rewarded
+[SD][gen] pack size=9 tier=2 index=111 (no runtime generate/grade)
+[SD] results offer = rewarded
+[SD][gen] pack size=9 tier=3 index=112 (no runtime generate/grade)
+[SD] results offer = rewarded
+[SD][gen] pack size=9 tier=3 index=113 (no runtime generate/grade)
+[SD] results offer = rewarded
+[SD][gen] pack size=9 tier=3 index=114 (no runtime generate/grade)
+[SD] results offer = rewarded
+[33m    [Orphans]:  [0m441 new orphans in test.
+* test_no_midgame_while_grid_open_and_never_both_on_results
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":77704,"ts":1792495901896}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][gen] pack size=6 tier=2 index=1 (no runtime generate/grade)
+[SD][ads] {"context":"grid","grid_open":true,"kind":"midgame","mode":"mock_available","origin":"test","result":"blocked_grid_open","t_ms":77741,"ts":1792495901933}
+[SD] results offer = rewarded
+[33m    -- Awaiting 0.8 second(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=10002 ms=6.42
+[SD][ads] {"context":"grid","grid_open":true,"kind":"midgame","mode":"mock_available","origin":"test","result":"blocked_grid_open","t_ms":78424,"ts":1792495902616}
+[SD] results offer = rewarded
+[33m    -- Awaiting 0.8 second(s) -- 
+[0m[SD][timing] generate size=6 tier=2 seed=10003 ms=27.75
+[SD][ads] {"context":"grid","grid_open":true,"kind":"midgame","mode":"mock_available","origin":"test","result":"blocked_grid_open","t_ms":79238,"ts":1792495903430}
+[SD] results offer = midgame
+[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_available","origin":"results","result":"requested","t_ms":79257,"ts":1792495903449}
+[33m    -- Awaiting 0.8 second(s) -- 
+[0m[SD][ads] {"context":"results","grid_open":false,"kind":"midgame","mode":"mock_available","origin":"results","result":"finished","t_ms":79798,"ts":1792495903990}
+* test_reload_restores_everything
+[SD][ads] {"context":"results","grid_open":false,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":80012,"ts":1792495904204}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][timing] generate size=6 tier=1 seed=105 ms=7.19
+[SD] title ready
+[33m    -- Awaiting 1 frame(s) -- 
+[0m[33m    [Orphans]:  [0m6 new orphans in test.
+* test_readability_9x9_at_1280x720
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":80071,"ts":1792495904263}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][gen] pack size=9 tier=1 index=0 (no runtime generate/grade)
+[33m    -- Awaiting 3 frame(s) -- 
+[0m    viewport (1280, 720), 9x9 cell px = 72
+* test_runtime_no_9x9_generation_logged
+[SD][ads] {"context":"grid","grid_open":true,"kind":"mode","mode":"mock_available","origin":"mock_available","result":"set","t_ms":80212,"ts":1792495904404}
+[SD] title ready
+[33m    -- Awaiting 2 frame(s) -- 
+[0m[SD][gen] pack size=9 tier=4 index=0 (no runtime generate/grade)
+[SD][timing] generate size=4 tier=1 seed=100 ms=1.24
+[33m    [Orphans]:  [0m31 new orphans in test.
+[33m[Orphans]:  [0m30 new orphans in script.
+[1m15/15 passed.
+[0m
+
+
+
+[33m==============================================
+[0m[33m= Run Summary
+[0m[33m==============================================
+[0m
+---- Totals ----
+Scripts           9
+Tests             111
+  Passing         111
+Asserts           686
+Time              79.259s
+
+
+[32m---- All tests passed! ----
+[0m
+EXIT 0

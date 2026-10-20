@@ -14,17 +14,17 @@ const TASKS = [
 	{"id": "lighthouse", "name": "Restore lighthouse", "cost": 4, "decor": ["Red stripes", "Blue stripes", "Classic white"]},
 	{"id": "cafe", "name": "Café terrace", "cost": 5, "decor": ["Striped awning", "Parasols"]},
 ]
-## Path of 15 grids: [size, tier]
-const PATH = [[4, 1], [4, 1], [4, 1], [4, 1],
-	[6, 1], [6, 1], [6, 1], [6, 2], [6, 2], [6, 2],
-	[9, 2], [9, 2], [9, 3], [9, 3], [9, 3]]
+const Levels = preload("res://game/levels.gd")
+const PATH_VERSION = 2   # 1 = old 15-grid path, 2 = 20-level objectives path
 
 var coins: int = 100
 var tokens: int = 3
 var stars: int = 0          # unspent stars
 var stars_earned: int = 0
 var path_next: int = 0      # index of next path grid (0..15)
-var path_stars: Array = []  # stars awarded per completed path grid
+var path_stars: Array = []  # stars awarded per completed level (first completion)
+var level_best: Array = []  # best stars per level (0 = unknown / migrated)
+var migrated_from_v1: bool = false
 var tasks: Dictionary = {}  # id -> true
 var decor: Dictionary = {}  # id -> choice index
 var sc_times: Array = []    # second-chance use timestamps (Unix ms)
@@ -82,36 +82,46 @@ func record_second_chance(now_ms: int) -> void:
 	sc_times = keep
 
 # ---- path / stars ----
-static func stars_for(size: int, mistakes_or_continue: bool, revealed: bool) -> int:
-	match size:
-		4: return 1
-		6: return 1 + (0 if mistakes_or_continue else 1)
-	return 2 + (0 if (mistakes_or_continue or revealed) else 1)
+static func path_length() -> int:
+	return Levels.count()
 
-## Completion bookkeeping. mode: "path" | "quick" | "classic". Returns {coins, stars, token}.
-func complete_grid(mode: String, size: int, path_index: int, had_mistakes: bool, revealed: bool) -> Dictionary:
-	var r = {"coins": COINS[size], "stars": 0, "token": 0}
+## Level completion (path). Stars only on first completion; best kept on replays. Coins by size.
+func complete_level(index: int, size: int, stars_won: int) -> Dictionary:
+	var r = {"coins": COINS[size], "stars": 0, "token": 0, "level_stars": stars_won}
 	coins += COINS[size]
-	if mode == "path" and path_index == path_next and path_next < PATH.size():
-		var s = stars_for(size, had_mistakes, revealed)
-		path_stars.append(s)
-		stars += s
-		stars_earned += s
+	while level_best.size() <= index: level_best.append(0)
+	level_best[index] = maxi(level_best[index], stars_won)
+	if index == path_next and path_next < path_length():
+		path_stars.append(stars_won)
+		stars += stars_won
+		stars_earned += stars_won
 		path_next += 1
-		r.stars = s
+		r.stars = stars_won
 		r.token = grant_tokens(1)
 	return r
 
+## Quick / Classic: coins only.
+func complete_grid(mode: String, size: int, _path_index: int = -1, _m: bool = false, _r: bool = false) -> Dictionary:
+	coins += COINS[size]
+	return {"coins": COINS[size], "stars": 0, "token": 0}
+
 func path_finished() -> bool:
-	return path_next >= PATH.size()
+	return path_next >= path_length()
 
 func task_cost(id: String) -> int:
 	for t in TASKS:
 		if t.id == id: return t.cost
 	return 999
 
+## Tasks unlock in order (spec v1 §5).
+func task_unlocked(id: String) -> bool:
+	for t in TASKS:
+		if t.id == id: return true
+		if not tasks.has(t.id): return false
+	return false
+
 func buy_task(id: String) -> bool:
-	if tasks.has(id) or stars < task_cost(id): return false
+	if tasks.has(id) or not task_unlocked(id) or stars < task_cost(id): return false
 	stars -= task_cost(id)
 	tasks[id] = true
 	decor[id] = 0
@@ -125,7 +135,7 @@ func area_restored() -> bool:
 
 func to_dict() -> Dictionary:
 	return {"v": 1, "coins": coins, "tokens": tokens, "stars": stars, "stars_earned": stars_earned,
-		"path_next": path_next, "path_stars": path_stars, "tasks": tasks, "decor": decor,
+		"path_v": PATH_VERSION, "path_next": path_next, "path_stars": path_stars, "level_best": level_best, "migrated_from_v1": migrated_from_v1, "tasks": tasks, "decor": decor,
 		"sc_times": sc_times, "sc_lock_until": sc_lock_until, "current_grid": current_grid,
 		"classic_index": classic_index, "quick_seed": quick_seed, "classic_tier": classic_tier}
 
@@ -135,6 +145,11 @@ func from_dict(d: Dictionary) -> void:
 	path_next = int(d.get("path_next", 0))
 	path_stars = []
 	for s in d.get("path_stars", []): path_stars.append(int(s))
+	level_best = []
+	for s in d.get("level_best", []): level_best.append(int(s))
+	migrated_from_v1 = bool(d.get("migrated_from_v1", false))
+	if int(d.get("path_v", 1)) < PATH_VERSION:
+		_migrate_v1()
 	tasks = d.get("tasks", {})
 	decor = {}
 	for k in d.get("decor", {}): decor[k] = int(d.decor[k])
@@ -145,4 +160,18 @@ func from_dict(d: Dictionary) -> void:
 	classic_index = {}
 	for k in d.get("classic_index", {}): classic_index[str(k)] = int(d.classic_index[k])
 	quick_seed = int(d.get("quick_seed", 0))
+	if int(d.get("path_v", 1)) < PATH_VERSION and current_grid.get("meta", {}).get("mode", "") == "path":
+		current_grid = {}   # an old 15-grid path grid in progress can't map to a level
 	classic_tier = clampi(int(d.get("classic_tier", 1)), 1, 4)
+
+## Old 15-grid path -> 20-level path. Earned stars, coins, tokens and bought tasks are kept as-is
+## (no double award); progress maps proportionally (n/15 -> floor(n*20/15)); those levels count as
+## completed with best = 0 (replayable, no further stars).
+func _migrate_v1() -> void:
+	var old = path_next
+	path_next = mini(path_length(), int(floor(old * path_length() / 15.0)))
+	level_best = []
+	for i in path_next: level_best.append(0)
+	path_stars = []
+	for i in path_next: path_stars.append(0)
+	migrated_from_v1 = old > 0

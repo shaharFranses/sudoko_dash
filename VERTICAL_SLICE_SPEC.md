@@ -1,4 +1,4 @@
-# Sudoku Dash: Vertical Slice Spec (v3, resolves QA gaps G1-G11 from QA_TEST_PLAN.md)
+# Sudoku Dash: Vertical Slice Spec (v3.1: v3 plus SM clarifications)
 Owner: SD Game Design. Engine: Godot 4.3, single-thread web export. Ships to CrazyGames first.
 
 ## 1. Sudoku module (engine-agnostic)
@@ -19,12 +19,12 @@ Owner: SD Game Design. Engine: Godot 4.3, single-thread web export. Ships to Cra
 
 ## 3. Economy (minimal, slice only)
 - **Coins:** 4x4 grid +10, 6x6 +20, 9x9 +40. The player starts with 100.
-- **Hint tokens:** start with 3. Each completed path grid gives +1 free token, and ads give +1 per view. The cap is 10 total tokens from every source, and grants are lost when the player is at the cap. Buying with coins spends 30 coins on one hint immediately, which never adds a token.
+- **Hint tokens:** start with 3. Each completed path grid gives +1 free token, and ads give +1 per view. The cap is 10 total tokens from every source, and grants are lost when the player is at the cap. At 10 tokens, the "watch ad for token" button is hidden. Buying with coins spends 30 coins on one hint immediately, which never adds a token.
 - **Coin options the player can't afford** are shown disabled with their price, plus the line "Need N more coins". They're never hidden, so the screen layout stays stable.
 
 ## 4. Hints (never placed on the live grid)
 - The grid shows only a **Hint** button. It pauses the timer-free grid and opens the Hint panel, so the board is covered or dimmed.
-- **Teach:** shows the next entry from the grader's step log, highlighting its cells and explaining the technique in one line, such as "Hidden single: 7 can only go here in this box." Every size, 9x9 included, calls `step()` live on the current board (correct player digits plus givens; wrong digits are ignored and flagged first). Stored steps are never shown, and `step()` on a 9x9 must take 20 ms or less.
+- **Teach:** shows the next entry from the grader's step log, highlighting its cells and explaining the technique in one line, such as "Hidden single: 7 can only go here in this box." Every size, 9x9 included, calls `step()` live on the current board (givens plus player digits). If a wrong digit is present, Teach flags that digit and stops. A valid step either places the correct digit or removes only candidates that aren't in the solution. Stored steps are never shown, and `step()` on a 9x9 must take 20 ms or less.
 - **Reveal:** fills the selected cell.
 - **Paying:** a hint costs 1 token. With 0 tokens the player can pay 30 coins, and if ads are available they can instead watch an ad for 1 token.
 - No button solves the whole grid.
@@ -35,7 +35,7 @@ Owner: SD Game Design. Engine: Godot 4.3, single-thread web export. Ships to Cra
 - **Continue:** the mistake counter resets to 0, wrong digits are removed, and the board, notes, and undo history (minus the wrong digits) are kept. The next 3 mistakes end the grid with only Retry available.
 - **Retry:** restarts the same puzzle from its givens. Placed digits, notes, undo history, and mistakes are all cleared, and the grid's second-chance allowance is restored. Tokens and coins that were spent stay spent.
 - **Cap:** 1 second chance per grid attempt, and no more than 3 in any rolling 24-hour window, counting coins and ads together. Path, Quick 6x6, and Classic 9x9 all count. Usage timestamps (Unix ms) are saved.
-- **Clock tampering:** if the device clock is earlier than the newest saved timestamp, treat the window as still full, so the cap stays in place until the clock passes that timestamp plus 24 hours. Timestamps in the future get clamped to now. Once capped, only Retry is shown.
+- **Clock tampering:** if the device clock is earlier than the newest saved timestamp, treat the window as still full, so the cap stays in place until the clock passes that timestamp plus 24 hours. Once capped, only Retry is shown.
 
 ## 6. Ads (an adapter over CrazyGames SDK v3, with a mock offline)
 - `Ads.available()` returns false when Basic Launch has ads off, an adblocker is present, the SDK has an error, or the player is offline.
@@ -52,6 +52,9 @@ Owner: SD Game Design. Engine: Godot 4.3, single-thread web export. Ships to Cra
 - **Also included:** Quick 6x6 and Classic 9x9 (tier 1-4, from the packs), unlimited and outside the path.
 - **Save:** CrazyGames data with a localStorage fallback. Saves path progress, stars, coins, tokens, tasks, decor, second-chance usage timestamps, and the grid in progress.
 
+## 7b. Debug hooks
+Debug hooks follow the list in QA_TEST_PLAN.md.
+
 ## 8. Out of scope
 Materials, IAP, pass, events, daily puzzles, accounts or cloud sync, tier 5 techniques, more than one area, audio beyond placeholder, localisation, mobile builds, and Unity.
 
@@ -59,7 +62,7 @@ Materials, IAP, pass, events, daily puzzles, accounts or cloud sync, tier 5 tech
 1. The GUT suite passes headless with 0 failures.
 2. Every pack puzzle has exactly one solution and a grade matching its stored tier. 100 out of 100 seeded 4x4 and 6x6 puzzles are unique.
 3. The web build makes no runtime calls to generate a 9x9 (log check). 4x4 and 6x6 generation takes 30 ms or less (p95) in Chrome, with no frame over 50 ms.
-4. The web build boots past the title in Chrome and Firefox with 0 console errors, and works as a single-thread export.
+4. The web build boots past the title in Chrome and Firefox with 0 console errors (errors from the ad SDK or from requests an adblocker blocked are ignored), and works as a single-thread export.
 5. Digits, notes, and undo work with touch, mouse, and keyboard, and undo restores the exact previous state.
 6. Pressing Hint always opens the panel and pauses the grid first, with no rewarded button visible on the live grid.
 7. Teach shows the technique name and highlights matching the grader's step for that board state.

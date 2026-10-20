@@ -1,0 +1,80 @@
+## run 1 14:30:35 IDT
+index.html enc_req=identity http=200 ttfb=0.158904s total=0.159033s bytes=7514 speed=47248B/s
+index.html enc_req=gzip http=200 ttfb=0.133583s total=0.133700s bytes=2886 speed=21585B/s
+index.html enc_req=br http=200 ttfb=0.124710s total=0.124892s bytes=7514 speed=60163B/s
+index.js enc_req=identity http=200 ttfb=0.180747s total=0.190520s bytes=331495 speed=1739948B/s
+index.js enc_req=gzip http=200 ttfb=0.155197s total=0.158231s bytes=85258 speed=538819B/s
+index.js enc_req=br http=200 ttfb=0.125712s total=0.131426s bytes=331495 speed=2522293B/s
+index.wasm enc_req=identity http=200 ttfb=0.348792s total=0.463327s bytes=35376909 speed=76354084B/s
+index.wasm enc_req=gzip http=200 ttfb=1.088575s total=1.112398s bytes=8145118 speed=7322125B/s
+index.wasm enc_req=br http=200 ttfb=0.117118s total=0.200215s bytes=35376909 speed=176694598B/s
+index.pck enc_req=identity http=200 ttfb=0.229931s total=0.244390s bytes=3567600 speed=14597978B/s
+index.pck enc_req=gzip http=200 ttfb=0.173272s total=0.179313s bytes=509201 speed=2839732B/s
+index.pck enc_req=br http=200 ttfb=0.122252s total=0.137127s bytes=3567600 speed=26016758B/s
+## run 2 14:30:39 IDT
+index.html enc_req=identity http=200 ttfb=0.123975s total=0.124116s bytes=7514 speed=60540B/s
+index.html enc_req=gzip http=200 ttfb=0.127408s total=0.127543s bytes=2886 speed=22627B/s
+index.html enc_req=br http=200 ttfb=0.121289s total=0.121423s bytes=7514 speed=61882B/s
+index.js enc_req=identity http=200 ttfb=0.125019s total=0.132046s bytes=331495 speed=2510450B/s
+index.js enc_req=gzip http=200 ttfb=0.118901s total=0.121626s bytes=85258 speed=700984B/s
+index.js enc_req=br http=200 ttfb=0.115948s total=0.121832s bytes=331495 speed=2720918B/s
+index.wasm enc_req=identity http=200 ttfb=0.125084s total=0.211745s bytes=35376909 speed=167073172B/s
+index.wasm enc_req=gzip http=200 ttfb=0.137014s total=0.168027s bytes=8145118 speed=48475054B/s
+index.wasm enc_req=br http=200 ttfb=0.120547s total=0.236570s bytes=35376909 speed=149540977B/s
+index.pck enc_req=identity http=200 ttfb=0.124771s total=0.139722s bytes=3567600 speed=25533559B/s
+index.pck enc_req=gzip http=200 ttfb=0.120698s total=0.126550s bytes=509201 speed=4023713B/s
+index.pck enc_req=br http=200 ttfb=0.127530s total=0.144808s bytes=3567600 speed=24636760B/s
+## run 3 14:30:40 IDT
+index.html enc_req=identity http=200 ttfb=0.117045s total=0.117423s bytes=7514 speed=63990B/s
+index.html enc_req=gzip http=200 ttfb=0.122030s total=0.122173s bytes=2886 speed=23622B/s
+index.html enc_req=br http=200 ttfb=0.136494s total=0.136667s bytes=7514 speed=54980B/s
+index.js enc_req=identity http=200 ttfb=0.119200s total=0.127480s bytes=331495 speed=2600368B/s
+index.js enc_req=gzip http=200 ttfb=0.116342s total=0.118615s bytes=85258 speed=718779B/s
+index.js enc_req=br http=200 ttfb=0.125366s total=0.131928s bytes=331495 speed=2512696B/s
+index.wasm enc_req=identity http=200 ttfb=0.125127s total=0.303261s bytes=35376909 speed=116654990B/s
+index.wasm enc_req=gzip http=200 ttfb=0.132951s total=0.158914s bytes=8145118 speed=51254879B/s
+index.wasm enc_req=br http=200 ttfb=0.126658s total=0.225116s bytes=35376909 speed=157149687B/s
+index.pck enc_req=identity http=200 ttfb=0.115339s total=0.127823s bytes=3567600 speed=27910469B/s
+index.pck enc_req=gzip http=200 ttfb=0.117532s total=0.123834s bytes=509201 speed=4111964B/s
+index.pck enc_req=br http=200 ttfb=0.117806s total=0.133249s bytes=3567600 speed=26773934B/s
+## headers
+-- index.html
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+last-modified: Tue, 20 Oct 2026 10:51:09 GMT
+cache-control: max-age=600
+content-encoding: gzip
+age: 7
+x-cache: HIT
+x-cache-hits: 1
+content-length: 2886
+-- index.wasm
+HTTP/2 200 
+content-type: application/wasm
+last-modified: Tue, 20 Oct 2026 10:51:09 GMT
+cache-control: max-age=600
+content-encoding: gzip
+age: 6
+x-cache: HIT
+x-cache-hits: 1
+content-length: 8145118
+-- index.pck
+HTTP/2 200 
+content-type: application/octet-stream
+last-modified: Tue, 20 Oct 2026 10:51:08 GMT
+cache-control: max-age=600
+content-encoding: gzip
+age: 5
+x-cache: HIT
+x-cache-hits: 1
+content-length: 509201
+-- index.js
+HTTP/2 200 
+content-type: application/javascript; charset=utf-8
+last-modified: Tue, 20 Oct 2026 10:51:08 GMT
+cache-control: max-age=600
+content-encoding: gzip
+age: 7
+x-cache: HIT
+x-cache-hits: 1
+content-length: 85258
