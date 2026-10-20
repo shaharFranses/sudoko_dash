@@ -49,4 +49,22 @@ window.SD_CG = (function () {
   };
 })();
 </script>
-<style>body{background:#bfe3ef;} #status{background:#bfe3ef;}</style>
+<style>
+html, body, canvas { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+body { background: #bfe3ef; } #status { background: #bfe3ef; }
+</style>
+<script>
+/* No context menu / long-press menu; resume Web Audio on first gesture (iOS/Safari autoplay policy). */
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, true);
+(function () {
+  var ctxs = window.__sdAudioCtxs = [];
+  ['AudioContext', 'webkitAudioContext'].forEach(function (n) {
+    var C = window[n]; if (!C) return;
+    var W = function (a, b) { var c = new C(a, b); ctxs.push(c); return c; };
+    W.prototype = C.prototype; window[n] = W;
+  });
+  function resume() { ctxs.forEach(function (c) { if (c.state !== 'running') { try { c.resume(); } catch (e) {} } }); }
+  ['pointerdown', 'touchend', 'keydown', 'mousedown'].forEach(function (ev) { document.addEventListener(ev, resume, true); });
+})();
+</script>

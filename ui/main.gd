@@ -66,6 +66,7 @@ func _btn(text: String, cb: Callable, fs: int = 26, min_h: int = 64) -> Button:
 	b.text = text
 	b.custom_minimum_size = Vector2(0, min_h)
 	b.add_theme_font_size_override("font_size", fs)
+	b.pressed.connect(func(): Sfx.play("tap"))
 	b.pressed.connect(cb)
 	return b
 
@@ -307,6 +308,7 @@ func _clear_teach() -> void:
 
 func _on_cell(i: int) -> void:
 	if overlay: return
+	Sfx.play("tap")
 	_clear_teach()
 	if digit_lock != 0:
 		grid_view.selected = i
@@ -340,6 +342,7 @@ func _apply_digit(i: int, d: int) -> void:
 		board.toggle_note(i, d)
 	else:
 		var r = board.place(i, d)
+		if r.changed: Sfx.play("mistake" if r.mistake else "place")
 		if r.changed and board.is_complete():
 			save()
 			_complete()
@@ -553,6 +556,7 @@ func _retry() -> void:
 
 # ---------------- results ----------------
 func _complete() -> void:
+	Sfx.play("complete")
 	var r = profile.complete_grid(grid_meta.mode, board.size, grid_meta.path_index, board.any_mistake or board.used_continue, board.reveals > 0)
 	profile.current_grid = {}
 	policy.on_grid_completed()

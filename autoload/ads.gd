@@ -5,6 +5,8 @@ extends Node
 
 signal changed
 signal logged(entry: Dictionary)
+signal ad_started
+signal ad_finished
 
 const TIMEOUT_S = 8.0
 const MOCK_PATH = "res://debug/ads_mock.gd"
@@ -76,6 +78,7 @@ func _request(kind: String, origin: String) -> bool:
 		_log(kind, origin, "unavailable")
 		return false
 	busy = true
+	ad_started.emit()   # audio muted for the whole ad (CrazyGames requirement)
 	_log(kind, origin, "requested")
 	var ok = false
 	var timed_out = false
@@ -95,4 +98,5 @@ func _request(kind: String, origin: String) -> bool:
 	var res = "finished" if ok else ("timeout" if timed_out else "error")
 	_log(kind, origin, res)
 	busy = false
+	ad_finished.emit()
 	return ok
