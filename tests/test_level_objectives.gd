@@ -229,3 +229,88 @@ func test_h7_state_dump_and_timer_readout():
 	var lbl = main.find_child("TimerDebug", true, false)
 	assert_not_null(lbl, "debug timer readout")
 	assert_string_contains(lbl.text, "elapsed_ms=4321")
+
+func test_blur_signal_from_page_events():
+	var S = load("res://autoload/sfx.gd")
+	assert_true(S.blur_from_page("n"))
+	assert_false(S.blur_from_page("y"))
+	assert_false(S.blur_from_page("u"), "no page script -> treated as focused (headless QA)")
+	_start("tide")
+	Sfx.set_reason("blur", S.blur_from_page("n"))
+	assert_false(main.timer_running())
+	Sfx.set_reason("blur", S.blur_from_page("y"))
+	assert_true(main.timer_running())
+
+# ---------------- section 8 criteria ----------------
+func test_c13_path_matches_spec_table():
+	var md = FileAccess.get_file_as_string("res://LEVEL_OBJECTIVES_SPEC.md") if FileAccess.file_exists("res://LEVEL_OBJECTIVES_SPEC.md") else ""
+	if md == "": pending("spec not in res://"); return
+	var names = {"Digit Hunt": "digit", "Fill the Line": "line", "Full Solve": "full", "Full Solve (finale)": "full", "Lantern Path": "lantern", "Beat the Tide": "tide"}
+	var rows = 0
+	for line in md.split("\n"):
+		var c = Array(line.split("|")).map(func(x): return x.strip_edges())
+		if c.size() < 8 or not c[1].is_valid_int(): continue
+		var lv = Levels.level(int(c[1]) - 1)
+		rows += 1
+		assert_eq(lv.grid_id, c[2]); assert_eq("%dx%d" % [lv.size, lv.size], c[3]); assert_eq(lv.objective, names[c[4]], "L" + c[1])
+		var tiers = Array(c[6].split("-")).map(func(x): return int(x))
+		assert_between(int(lv.tier), tiers[0], tiers.back(), "L%s tier" % c[1])
+		var p: String = c[5]
+		if p.begins_with("digit"): assert_eq(int(lv.params.digit), int(p.split(" ")[1]))
+		if p.ends_with("cells"): assert_eq(lv.params.path.size(), int(p.split(" ")[0]))
+		if p.contains("par "): assert_almost_eq(float(lv.params.par_mult), float(p.split("par ")[1]), 0.001)
+		if lv.objective == "line":
+			var u = lv.params.units
+			if p == "row + col": assert_eq([u[0].kind, u[1].kind], ["row", "col"])
+			elif p.contains(" "): assert_eq([u[0].kind, int(u[0].index)], [p.split(" ")[0], int(p.split(" ")[1])])
+	assert_eq(rows, 20)
+	assert_eq(Profile.TASKS.map(func(t): return t.cost), [3, 4, 4, 4, 5])
+
+func test_c3_completes_at_last_target_not_before():
+	_start("digit")
+	var t = main.targets.filter(func(c): return main.board.cells[c] == 0)
+	var nont = main.board.cells.find(0)
+	while nont in main.targets: nont = main.board.cells.find(0, nont + 1)
+	for k in t.size():
+		assert_eq(main.screen_name, "grid", "not complete before target %d" % k)
+		main._on_cell(t[k]); main._on_digit(main.board.solution[t[k]])
+	assert_eq(main.screen_name, "results")
+
+func test_c4_wrong_outside_t_is_mistake_third_opens_second_chance():
+	main.start_level(6)   # L7 6x6 Fill the Line (4x4 has no mistake limit)
+	var c = 0
+	while main.board.cells[c] != 0 or c in main.targets: c += 1
+	var wrong = []
+	for d in range(1, main.board.size + 1):
+		if d != main.board.solution[c]: wrong.append(d)
+	for k in 3:
+		main._on_cell(c); main._on_digit(wrong[k])
+	assert_eq(main.board.mistakes, 3)
+	assert_eq(main.overlay.name, "SecondChancePanel")
+
+func test_c5_non_timed_star_table():
+	var lv = {"objective": "digit", "params": {}}
+	assert_eq(Obj.stars(lv, false, 0, 0), 3)
+	assert_eq(Obj.stars(lv, true, 0, 0), 2)
+	assert_eq(Obj.stars(lv, false, 2, 0), 2)
+	assert_eq(Obj.stars(lv, true, 5, 0), 1)
+
+func test_c6_tide_reaching_zero_does_not_end_level():
+	var lv = _start("tide")
+	main.elapsed_ms = int(lv.par_time_s) * 1000 + 60000
+	main._process(0.1)
+	assert_eq(main.screen_name, "grid")
+	assert_eq(main.tide_bar.value, 0.0)
+
+func test_c9_no_ads_while_level_open():
+	Ads.call_log.clear()
+	main.policy.session_start_ms = -10 * 60 * 1000
+	for i in 20:
+		main.start_level(i)
+		var b = main.board
+		for c in b.cells.size():
+			if main.board == null: break
+			if b.cells[c] == 0: main._on_cell(c); main._on_digit(b.solution[c])
+		await wait_frames(1)
+	for e in Ads.call_log:
+		assert_false(e.get("grid_open", false) and e.kind == "midgame", str(e))

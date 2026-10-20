@@ -73,7 +73,12 @@ func _process(delta: float) -> void:
 	if _poll < 0.25: return
 	_poll = 0.0
 	set_reason("hidden", str(JavaScriptBridge.eval("document.hidden ? 'y' : 'n'")) == "y")
-	set_reason("blur", str(JavaScriptBridge.eval("document.hasFocus() ? 'y' : 'n'")) == "n")
+	# window blur/focus come from the page script's event listeners (SD_AUDIO, starts focused; no hasFocus polling)
+	set_reason("blur", blur_from_page(str(JavaScriptBridge.eval("window.SD_AUDIO ? (window.SD_AUDIO.state().focused ? 'y' : 'n') : 'u'"))))
+
+## 'y' focused, 'n' blurred (window blur event seen), anything else (no page script) -> not blurred.
+static func blur_from_page(v: String) -> bool:
+	return v == "n"
 
 func _notification(what: int) -> void:
 	# desktop / mobile fallback
