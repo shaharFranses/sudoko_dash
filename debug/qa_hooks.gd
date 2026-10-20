@@ -15,13 +15,13 @@ func _ready() -> void:
 	Ads.logged.connect(_on_ad_logged)
 	if not OS.has_feature("web"): return
 	var q = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('ads') || ''"))
-	if q != "": Ads.set_mode(q if q.begins_with("mock_") or q == "sdk" or q == "none" else "mock_" + q)
+	if q != "": Ads.set_mode(norm_mode(q))
 	var o = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('clock') || ''"))
 	if o != "": _dbg().clock_offset_ms = int(o)
 	JavaScriptBridge.eval("window.SD_DEBUG = {}; window.__adsLog = window.__adsLog || [];")
 	var dbg = JavaScriptBridge.get_interface("window").SD_DEBUG
 	var defs = {
-		"setAdMode": func(a): Ads.set_mode(str(a[0])),
+		"setAdMode": func(a): Ads.set_mode(norm_mode(str(a[0]))),
 		"setClockOffsetMs": func(a): _dbg().clock_offset_ms = int(a[0]),
 		"setCoins": func(a): set_coins(int(a[0])),
 		"setTokens": func(a): set_tokens(int(a[0])),
@@ -35,6 +35,11 @@ func _ready() -> void:
 		dbg[k] = cb
 
 func _main(): return _dbg().main
+
+## Accepts "available|unavailable|error|timeout" (QA_TEST_PLAN H1) or full names.
+static func norm_mode(q: String) -> String:
+	q = q.strip_edges().to_lower()
+	return q if q.begins_with("mock_") or q == "sdk" or q == "none" else "mock_" + q
 
 func set_coins(n: int) -> void:
 	if _main(): _main().profile.coins = n; _after()

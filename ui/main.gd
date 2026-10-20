@@ -296,7 +296,7 @@ func _build_grid_screen() -> void:
 
 func _refresh() -> void:
 	if board == null or grid_view == null: return
-	mistakes_label.text = ("Mistakes %d/%d" % [board.mistakes, board.max_mistakes]) if board.max_mistakes > 0 else ("Mistakes %d" % board.mistakes)
+	mistakes_label.text = ("Mistakes %d/%d" % [board.mistakes, board.max_mistakes]) if board.max_mistakes > 0 else "Warm-up: no mistake limit"
 	notes_btn.text = "Notes: ON" if notes_mode else "Notes: OFF"
 	status_label.text = "Tap a cell then a digit, or a digit then cells. Keys: 1-%d, arrows, Backspace, N, Ctrl+Z" % board.size
 	grid_view.queue_redraw()
@@ -343,6 +343,7 @@ func _apply_digit(i: int, d: int) -> void:
 	else:
 		var r = board.place(i, d)
 		if r.changed: Sfx.play("mistake" if r.mistake else "place")
+		if r.mistake: grid_view.wrong_feedback(i)
 		if r.changed and board.is_complete():
 			save()
 			_complete()
@@ -376,25 +377,36 @@ func _unhandled_input(e: InputEvent) -> void:
 	if screen_name != "grid" or overlay or not (e is InputEventKey) or not e.pressed: return
 	var n = board.size
 	var k = e.keycode
-	if k >= KEY_1 and k <= KEY_9 and k - KEY_0 <= n:
-		_on_digit(k - KEY_0)
-	elif k >= KEY_KP_1 and k <= KEY_KP_9 and k - KEY_KP_0 <= n:
-		_on_digit(k - KEY_KP_0)
-	elif k == KEY_N:
+	var pk = e.physical_keycode
+	var mod = e.ctrl_pressed or e.meta_pressed or e.alt_pressed
+	# Digits by PHYSICAL key (top row / numpad) so AZERTY etc. work; no modifiers; no key-repeat.
+	var d = 0
+	if pk >= KEY_1 and pk <= KEY_9: d = pk - KEY_0
+	elif pk >= KEY_KP_1 and pk <= KEY_KP_9: d = pk - KEY_KP_0
+	elif k >= KEY_KP_1 and k <= KEY_KP_9: d = k - KEY_KP_0
+	if d > 0:
+		if mod or e.echo or d > n: return
+		_on_digit(d)
+	elif k == KEY_N and not mod:
+		if e.echo: return
 		_toggle_notes()
 	elif k == KEY_Z and (e.ctrl_pressed or e.meta_pressed):
 		_undo()
-	elif k == KEY_BACKSPACE or k == KEY_DELETE:
+	elif (k == KEY_BACKSPACE or k == KEY_DELETE) and not mod:
+		if e.echo: return
 		_erase()
 	elif k in [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]:
-		var s = max(grid_view.selected, 0)
-		var r = s / n; var c = s % n
-		match k:
-			KEY_LEFT: c = (c + n - 1) % n
-			KEY_RIGHT: c = (c + 1) % n
-			KEY_UP: r = (r + n - 1) % n
-			KEY_DOWN: r = (r + 1) % n
-		grid_view.selected = r * n + c
+		if grid_view.selected < 0:
+			grid_view.selected = 0   # first arrow press selects the top-left cell
+		else:
+			var s = grid_view.selected
+			var r = s / n; var c = s % n
+			match k:
+				KEY_LEFT: c = (c + n - 1) % n
+				KEY_RIGHT: c = (c + 1) % n
+				KEY_UP: r = (r + n - 1) % n
+				KEY_DOWN: r = (r + 1) % n
+			grid_view.selected = r * n + c
 		digit_lock = 0
 		_refresh_pad()
 		_refresh()

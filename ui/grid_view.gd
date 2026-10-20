@@ -8,6 +8,30 @@ var selected: int = -1
 var teach_cells: Array = []
 var flag_cells: Array = []
 var teach_elims: Array = []
+var flash_cell: int = -1
+var flash_t: float = 0.0
+var feedback_count: int = 0   # wrong-entry feedback events (tests/QA)
+const FLASH_S = 0.45
+
+## Wrong entry: red flash on the cell + short horizontal shake of the grid.
+func wrong_feedback(i: int) -> void:
+	feedback_count += 1
+	flash_cell = i
+	flash_t = FLASH_S
+	set_process(true)
+	queue_redraw()
+
+func _process(delta: float) -> void:
+	if flash_t <= 0.0:
+		set_process(false)
+		return
+	flash_t = maxf(0.0, flash_t - delta)
+	queue_redraw()
+
+func _shake() -> Vector2:
+	if flash_t <= 0.0: return Vector2.ZERO
+	var k = flash_t / FLASH_S
+	return Vector2(cos((1.0 - k) * 40.0) * 6.0 * k, 0)
 
 const C_BG = Color("fffdf7")
 const C_LINE = Color("8aa2b0")
@@ -22,6 +46,7 @@ const C_TEACH = Color("ffe38a")
 const C_FLAG = Color("ffc2c2")
 
 func _ready() -> void:
+	set_process(false)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
 
@@ -51,7 +76,7 @@ func _draw() -> void:
 	if board == null: return
 	var n: int = board.size
 	var cp = cell_px()
-	var o = origin()
+	var o = origin() + _shake()
 	var font = get_theme_default_font()
 	draw_rect(Rect2(o, Vector2(cp * n, cp * n)), C_BG)
 	var sel_d = board.cells[selected] if selected >= 0 else 0
@@ -65,6 +90,7 @@ func _draw() -> void:
 			if i == selected: col = C_SEL
 		if i in teach_cells: col = C_TEACH
 		if i in flag_cells: col = C_FLAG
+		if i == flash_cell and flash_t > 0.0: col = C_FLAG.lerp(C_WRONG, 0.5 * flash_t / FLASH_S)
 		if col.a > 0: draw_rect(r, col)
 		var d: int = board.cells[i]
 		if d != 0:

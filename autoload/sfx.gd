@@ -25,8 +25,13 @@ func _ready() -> void:
 		p.volume_db = -10.0
 		add_child(p)
 		_players.append(p)
-	Ads.ad_started.connect(func(): set_reason("ad", true))
-	Ads.ad_finished.connect(func(): set_reason("ad", false))
+	Ads.ad_started.connect(func(): set_reason("ad", true); _js_ad(true))
+	Ads.ad_finished.connect(func(): set_reason("ad", false); _js_ad(false))
+
+## Page-level audio gate (web/head_include.html): ad state is authoritative there too.
+func _js_ad(on: bool) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.SD_AUDIO && window.SD_AUDIO.setAd(%s)" % ("true" if on else "false"))
 
 static func _make(notes: Array) -> AudioStreamWAV:
 	var data = PackedByteArray()

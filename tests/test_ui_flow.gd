@@ -60,12 +60,12 @@ func test_input_mouse_and_keyboard_and_undo_exact():
 	var k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_N
 	main._unhandled_input(k)
 	assert_true(main.notes_mode)
-	k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_1 + 1
+	k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_1 + 1; k.physical_keycode = KEY_1 + 1
 	main._unhandled_input(k)
 	assert_ne(b.notes[i], 0)
 	var s1 = b.snapshot()
 	main._toggle_notes()
-	k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_0 + b.solution[i]
+	k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_0 + b.solution[i]; k.physical_keycode = KEY_0 + b.solution[i]
 	main._unhandled_input(k)
 	assert_eq(b.cells[i], b.solution[i])
 	k = InputEventKey.new(); k.pressed = true; k.keycode = KEY_Z; k.ctrl_pressed = true
