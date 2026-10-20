@@ -3,6 +3,18 @@ extends Node
 
 const KEY = "sudoku_dash_save_v1"
 
+## Waits (max 5 s) until the CrazyGames SDK init has resolved or failed; immediate off-portal.
+func wait_ready() -> void:
+	if not OS.has_feature("web"): return
+	var t0 = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 5000:
+		if str(JavaScriptBridge.eval("(!window.SD_CG || window.SD_CG.ready()) ? 'y' : 'n'")) == "y": return
+		await get_tree().create_timer(0.05).timeout
+
+func loading_stop() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.SD_CG && window.SD_CG.loadingStop()")
+
 func save(d: Dictionary) -> void:
 	var text = JSON.stringify(d)
 	if OS.has_feature("web"):

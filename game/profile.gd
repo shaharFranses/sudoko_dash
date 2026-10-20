@@ -32,6 +32,7 @@ var sc_lock_until: int = 0  # clock-rollback lock
 var current_grid: Dictionary = {}  # saved grid in progress
 var classic_index: Dictionary = {}  # tier -> next pack index
 var quick_seed: int = 0
+var classic_tier: int = 1
 
 func grant_tokens(n: int) -> int:
 	var before = tokens
@@ -126,7 +127,7 @@ func to_dict() -> Dictionary:
 	return {"v": 1, "coins": coins, "tokens": tokens, "stars": stars, "stars_earned": stars_earned,
 		"path_next": path_next, "path_stars": path_stars, "tasks": tasks, "decor": decor,
 		"sc_times": sc_times, "sc_lock_until": sc_lock_until, "current_grid": current_grid,
-		"classic_index": classic_index, "quick_seed": quick_seed}
+		"classic_index": classic_index, "quick_seed": quick_seed, "classic_tier": classic_tier}
 
 func from_dict(d: Dictionary) -> void:
 	coins = int(d.get("coins", 100)); tokens = int(d.get("tokens", 3))
@@ -144,3 +145,4 @@ func from_dict(d: Dictionary) -> void:
 	classic_index = {}
 	for k in d.get("classic_index", {}): classic_index[str(k)] = int(d.classic_index[k])
 	quick_seed = int(d.get("quick_seed", 0))
+	classic_tier = clampi(int(d.get("classic_tier", 1)), 1, 4)

@@ -1,0 +1,91 @@
+## QA hooks H1-H6 (debug builds only; excluded from the release export).
+## Web: window.SD_DEBUG.{setAdMode(m), setClockOffsetMs(ms), setCoins(n), setTokens(n), resetSecondChanceCap(), dump()}
+##      window.SD_QA (state), window.__adsLog (H2), window.__midgame (H3), window.__sdDump (H5).
+##      URL ?ads=available|unavailable|error|timeout (H1), ?clock=<offset ms>.
+## Keys: F6 cycle ad mode, F7 dump state, F8 +25h clock offset.
+extends Node
+
+var _cbs: Array = []
+
+func _dbg(): return get_parent()
+
+func _ready() -> void:
+	print("[SD][debug] QA hooks enabled (debug build)")
+	Ads.changed.connect(publish)
+	Ads.logged.connect(_on_ad_logged)
+	if not OS.has_feature("web"): return
+	var q = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('ads') || ''"))
+	if q != "": Ads.set_mode(q if q.begins_with("mock_") or q == "sdk" or q == "none" else "mock_" + q)
+	var o = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('clock') || ''"))
+	if o != "": _dbg().clock_offset_ms = int(o)
+	JavaScriptBridge.eval("window.SD_DEBUG = {}; window.__adsLog = window.__adsLog || [];")
+	var dbg = JavaScriptBridge.get_interface("window").SD_DEBUG
+	var defs = {
+		"setAdMode": func(a): Ads.set_mode(str(a[0])),
+		"setClockOffsetMs": func(a): _dbg().clock_offset_ms = int(a[0]),
+		"setCoins": func(a): set_coins(int(a[0])),
+		"setTokens": func(a): set_tokens(int(a[0])),
+		"resetSecondChanceCap": func(_a): reset_sc_cap(),
+		"dump": func(_a): pass,
+	}
+	for k in defs:
+		var f: Callable = defs[k]
+		var cb = JavaScriptBridge.create_callback(func(args): f.call(args); publish())
+		_cbs.append(cb)
+		dbg[k] = cb
+
+func _main(): return _dbg().main
+
+func set_coins(n: int) -> void:
+	if _main(): _main().profile.coins = n; _after()
+
+func set_tokens(n: int) -> void:
+	if _main(): _main().profile.tokens = clampi(n, 0, 10); _after()
+
+func reset_sc_cap() -> void:
+	if _main():
+		_main().profile.sc_times = []
+		_main().profile.sc_lock_until = 0
+		_after()
+
+func _after() -> void:
+	var m = _main()
+	m.save()
+	if m.screen_name == "harbour": m.show_harbour()
+
+func _on_ad_logged(e: Dictionary) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(window.__adsLog = window.__adsLog || []).push(%s)" % JSON.stringify(e))
+
+func state() -> Dictionary:
+	var d = {"adMode": Ads.mode, "adsAvailable": Ads.available(), "context": Ads.context,
+		"adLog": Ads.call_log, "clockOffsetMs": _dbg().clock_offset_ms}
+	var m = _main()
+	if m:
+		d["genLog"] = m.source.log
+		d["profile"] = m.profile.to_dict()
+		d["grid"] = m.board.to_dict() if m.board else null
+		d["screen"] = m.screen_name
+		d["midgame"] = {"counter": m.policy.counter, "sessionAgeMs": Time.get_ticks_msec() - m.policy.session_start_ms}
+		d["stepDump"] = m.step_dump()
+	return d
+
+func publish() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.SD_QA = %s; window.__midgame = window.SD_QA.midgame; window.__sdDump = window.SD_QA.stepDump;" % JSON.stringify(state()))
+
+func _unhandled_input(e: InputEvent) -> void:
+	if not (e is InputEventKey) or not e.pressed: return
+	match e.keycode:
+		KEY_F6:
+			var ms = Ads.modes()
+			Ads.set_mode(ms[(ms.find(Ads.mode) + 1) % ms.size()])
+			print("[SD][debug] ad mode = ", Ads.mode)
+		KEY_F7:
+			print("[SD][debug] state = ", JSON.stringify(state()))
+		KEY_F8:
+			_dbg().clock_offset_ms += 25 * 3600 * 1000
+			print("[SD][debug] clock offset ms = ", _dbg().clock_offset_ms)
+		_:
+			return
+	publish()

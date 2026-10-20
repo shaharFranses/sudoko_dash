@@ -26,12 +26,16 @@ var teach_label: Label
 var status_label: Label
 var notes_btn: Button
 var mistakes_label: Label
-var classic_tier: int = 1
+var classic_tier: int:
+	get: return profile.classic_tier
+	set(v): profile.classic_tier = v
+var results_label: Label = null
 var last_teach: Dictionary = {}   # checker format: {cell,value} | {eliminations} | {flag}
 
 func _ready() -> void:
 	Dbg.main = self
 	policy = AdPolicy.new(Time.get_ticks_msec())
+	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
 	if not d.is_empty(): profile.from_dict(d)
 	var bg = ColorRect.new(); bg.color = Color("bfe3ef"); bg.set_anchors_preset(PRESET_FULL_RECT); add_child(bg)
@@ -106,6 +110,7 @@ func show_title() -> void:
 	play.name = "PlayButton"
 	v.add_child(play)
 	print("[SD] title ready")
+	Store.loading_stop()
 
 func show_harbour() -> void:
 	screen_name = "harbour"
@@ -141,7 +146,7 @@ func show_harbour() -> void:
 	v.add_child(_btn("Quick 6x6", start_quick, 24))
 	var tiers = HBoxContainer.new()
 	for t in [1, 2, 3, 4]:
-		var b = _btn("T%d" % t, func(): classic_tier = t; show_harbour(), 22, 56)
+		var b = _btn("T%d" % t, func(): classic_tier = t; save(); show_harbour(), 22, 56)
 		b.toggle_mode = true; b.button_pressed = t == classic_tier
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		tiers.add_child(b)
@@ -561,7 +566,10 @@ func _show_results(r: Dictionary) -> void:
 	_clear()
 	var v = _center_box()
 	v.add_child(_label("Grid complete!", 40))
-	v.add_child(_label("+%d coins   +%d stars%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")], 28))
+	results_label = _label("+%d coins   +%d stars%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")], 28)
+	results_label.name = "ResultsRewards"
+	results_label.set_meta("r", r)
+	v.add_child(results_label)
 	var offer = policy.results_offer(Time.get_ticks_msec(), Ads.available())
 	print("[SD] results offer = ", offer)
 	if offer == "rewarded":
@@ -581,7 +589,13 @@ func _double(c: int) -> void:
 	if ok:
 		profile.coins += c
 		save()
-		if is_instance_valid(b): b.queue_free()
+		if is_instance_valid(b):
+			b.get_parent().remove_child(b)
+			b.queue_free()
+		if is_instance_valid(results_label):
+			var r: Dictionary = results_label.get_meta("r")
+			r.coins = r.coins + c
+			results_label.text = "+%d coins   +%d stars%s  (doubled!)" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")]
 	elif is_instance_valid(b):
 		b.disabled = false
 		b.text = "Ad failed - tap to try again"

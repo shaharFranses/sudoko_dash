@@ -2,24 +2,30 @@
 /* CrazyGames SDK v3 glue for Sudoku Dash. The SDK script is only loaded on the CrazyGames portal
    (or with ?cgsdk=1); elsewhere the game uses its offline ad mock and localStorage. */
 window.SD_CG = (function () {
-  var st = {}, n = 0, ok = false, env = 'none', adblock = false;
+  var st = {}, n = 0, ok = false, env = 'none', adblock = true, adblockKnown = false, settled = false, stopPending = false;
   var portal = /crazygames\./.test(location.hostname) || location.search.indexOf('cgsdk=1') >= 0;
   if (portal) {
     var s = document.createElement('script');
     s.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
     s.onload = function () {
       window.CrazyGames.SDK.init().then(function () {
-        env = window.CrazyGames.SDK.environment; ok = true;
-        window.CrazyGames.SDK.ad.hasAdblock().then(function (b) { adblock = !!b; }).catch(function () { adblock = true; });
-      }).catch(function () { ok = false; });
+        env = window.CrazyGames.SDK.environment; ok = true; settled = true;
+        try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {}
+        if (stopPending) { try { window.CrazyGames.SDK.game.loadingStop(); } catch (e) {} }
+        window.CrazyGames.SDK.ad.hasAdblock().then(function (b) { adblock = !!b; adblockKnown = true; })
+          .catch(function () { adblock = true; adblockKnown = true; });
+      }).catch(function () { ok = false; settled = true; });
     };
-    s.onerror = function () { ok = false; };
+    s.onerror = function () { ok = false; settled = true; };
     document.head.appendChild(s);
   }
   function cg() { return ok && env === 'crazygames' ? window.CrazyGames.SDK : null; }
   return {
     portal: function () { return portal; },
-    available: function () { return !!cg() && !adblock && navigator.onLine; },
+    ready: function () { return !portal || settled; },
+    loadingStop: function () { if (cg()) { try { cg().game.loadingStop(); } catch (e) {} } else { stopPending = true; } },
+    /* rewarded hidden until adblock detection has resolved */
+    available: function () { return !!cg() && adblockKnown && !adblock && navigator.onLine; },
     request: function (type) {
       var id = ++n; st[id] = 'pending';
       try {
