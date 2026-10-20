@@ -273,7 +273,7 @@ func _build_grid_screen() -> void:
 	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, 64)
 	outer.add_child(top)
 	top.add_child(_btn("Back", _leave_grid, 26, 60))
-	var title = "Path %d/15" % (grid_meta.path_index + 1) if grid_meta.mode == "path" else ("Quick 6x6" if grid_meta.mode == "quick" else "Classic 9x9 T%d" % grid_meta.tier)
+	var title = "Level %d/%d" % [grid_meta.path_index + 1, Profile.path_length()] if grid_meta.mode == "path" else ("Quick 6x6" if grid_meta.mode == "quick" else "Classic 9x9 T%d" % grid_meta.tier)
 	var tl = _label(title, 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
 	tl.autowrap_mode = TextServer.AUTOWRAP_OFF; tl.clip_text = true
 	top.add_child(tl)

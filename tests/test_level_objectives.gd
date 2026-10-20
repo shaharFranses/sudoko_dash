@@ -314,3 +314,11 @@ func test_c9_no_ads_while_level_open():
 		await wait_frames(1)
 	for e in Ads.call_log:
 		assert_false(e.get("grid_open", false) and e.kind == "midgame", str(e))
+
+func test_grid_title_shows_level_of_20():
+	main.start_level(11)
+	assert_not_null(main.find_child("*", true, false))
+	var found = false
+	for l in main.find_children("*", "Label", true, false):
+		if l.text == "Level 12/20": found = true
+	assert_true(found)
