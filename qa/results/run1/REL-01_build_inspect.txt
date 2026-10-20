@@ -1,0 +1,30 @@
+== sizes (bytes)
+47108931	web
+-rw-rw-rw- 1 box box   299462 Oct 20 11:26 web/index.js
+-rw-rw-rw- 1 box box  3736688 Oct 20 11:26 web/index.pck
+-rw-rw-rw- 1 box box 43016933 Oct 20 11:26 web/index.wasm
+39500994	web-release
+-rw-rw-rw- 1 box box   331495 Oct 20 11:26 web-release/index.js
+-rw-rw-rw- 1 box box  3736720 Oct 20 11:26 web-release/index.pck
+-rw-rw-rw- 1 box box 35376909 Oct 20 11:26 web-release/index.wasm
+== gzip sizes release
+index.wasm 7997635
+index.pck 471999
+index.js 84148
+== brotli
+== thread config in index.html
+ensureCrossOriginIsolationHeaders":false
+"executable":"index"
+"fileSizes":{"index.pck":3736720,"index.wasm":35376909}
+ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+== SharedArrayBuffer/pthread refs in release js
+      9 SharedArrayBuffer
+      1 crossOriginIsolated
+== wasm imports memory shared?
+wasm magic b'\x00asm'
+has shared memory flag (import env.memory with 0x03)? False
+== diff index.html debug vs release
+146c146
+< const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3736688,"index.wasm":43016933},"focusCanvas":true,"gdextensionLibs":[]};
+---
+> const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3736720,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};

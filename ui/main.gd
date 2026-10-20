@@ -449,8 +449,14 @@ func _open_hint_panel() -> void:
 	v.add_child(_btn("Back to grid", _close_overlay, 24))
 	Dbg.publish()
 
+func _lock_overlay() -> void:
+	if overlay:
+		for b in overlay.find_children("*", "Button", true, false): b.disabled = true
+
 func _ad_for_token() -> void:
+	_lock_overlay()
 	var ok = await Ads.rewarded("hint_token")
+	if screen_name != "grid" or board == null: return
 	if ok: profile.grant_tokens(1)
 	save()
 	if overlay:
@@ -520,7 +526,9 @@ func _second_chance(how: String) -> void:
 	if how == "coins":
 		if not profile.spend_coins(Profile.CONTINUE_COIN_PRICE): return
 	else:
+		_lock_overlay()
 		var ok = await Ads.rewarded("second_chance")
+		if screen_name != "grid" or board == null: return
 		if not ok:
 			if overlay:
 				root.remove_child(overlay); overlay.queue_free(); overlay = null
@@ -568,12 +576,14 @@ func _show_results(r: Dictionary) -> void:
 
 func _double(c: int) -> void:
 	var b = root.find_child("RewardedDouble", true, false)
+	if b: b.disabled = true
 	var ok = await Ads.rewarded("double_coins")
 	if ok:
 		profile.coins += c
 		save()
-		if b: b.queue_free()
-	elif b:
+		if is_instance_valid(b): b.queue_free()
+	elif is_instance_valid(b):
+		b.disabled = false
 		b.text = "Ad failed - tap to try again"
 
 ## H5: board/state dump in qa/sudoku_check.py --step format (+ notes, mistakes, undo stack).

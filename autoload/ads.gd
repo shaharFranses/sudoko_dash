@@ -5,6 +5,7 @@ extends Node
 signal changed
 
 const TIMEOUT_S = 8.0
+var timeout_s: float = TIMEOUT_S   # tests may shorten
 const MODES = ["mock_available", "mock_unavailable", "mock_error", "mock_timeout", "sdk"]
 
 var mode: String = "mock_available"
@@ -71,6 +72,7 @@ func _request(kind: String, origin: String) -> bool:
 	busy = true
 	_log(kind, origin, "requested")
 	var ok = false
+	var timed_out = false
 	var t0 = Time.get_ticks_msec()
 	match mode:
 		"mock_available":
@@ -80,16 +82,18 @@ func _request(kind: String, origin: String) -> bool:
 			await get_tree().process_frame
 			ok = false
 		"mock_timeout":
-			await get_tree().create_timer(TIMEOUT_S).timeout
+			await get_tree().create_timer(timeout_s).timeout
 			ok = false
+			timed_out = true
 		"sdk":
 			var id = int(JavaScriptBridge.eval("window.SD_CG.request('%s')" % kind))
 			var st = "pending"
-			while st == "pending" and Time.get_ticks_msec() - t0 < TIMEOUT_S * 1000:
+			while st == "pending" and Time.get_ticks_msec() - t0 < timeout_s * 1000:
 				await get_tree().create_timer(0.1).timeout
 				st = str(JavaScriptBridge.eval("window.SD_CG.status(%d)" % id))
 			ok = st == "finished"
-	var res = "finished" if ok else ("timeout" if Time.get_ticks_msec() - t0 >= TIMEOUT_S * 1000 else "error")
+			timed_out = st == "pending"
+	var res = "finished" if ok else ("timeout" if timed_out else "error")
 	_log(kind, origin, res)
 	busy = false
 	return ok
