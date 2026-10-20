@@ -52,7 +52,13 @@ func _init() -> void:
 	out = a.get("out", "")
 	var text := ""
 	if a.get("format", "json") == "jsonl":
-		for r in rows: text += JSON.stringify(r) + "\n"
+		for r in rows:
+			var n: int = r.size
+			var g2 = func(a):
+				var o = []
+				for k in n: o.append(a.slice(k * n, (k + 1) * n))
+				return o
+			text += JSON.stringify({"size": n, "tier": r.tier, "seed": r.seed, "givens": g2.call(r.givens), "solution": g2.call(r.solution)}) + "\n"
 	else:
 		text = JSON.stringify(rows, "  ")
 	if out == "": print(text)

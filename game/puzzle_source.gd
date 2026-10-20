@@ -28,6 +28,7 @@ func from_pack(size: int, tier: int, index: int) -> Dictionary:
 	var p: Array = pack(size, tier)
 	var e: Dictionary = p[index % p.size()]
 	log.append({"size": size, "tier": tier, "source": "pack", "index": index % p.size(), "ms": 0.0})
+	print("[SD][gen] pack size=%d tier=%d index=%d (no runtime generate/grade)" % [size, tier, index % p.size()])
 	return {"size": size, "tier": tier, "givens": _ints(e.givens), "solution": _ints(e.solution), "id": e.id}
 
 func get_puzzle(size: int, tier: int, seed_value: int) -> Dictionary:
@@ -42,6 +43,7 @@ func get_puzzle(size: int, tier: int, seed_value: int) -> Dictionary:
 		return from_pack(size, tier, seed_value)
 	gen_times_ms.append(ms)
 	log.append({"size": size, "tier": tier, "source": "generated", "seed": seed_value, "ms": ms})
+	print("[SD][timing] generate size=%d tier=%d seed=%d ms=%.2f" % [size, tier, seed_value, ms])
 	if p95() > BUDGET_MS and gen_times_ms.size() >= 5: use_fallback[size] = true
 	if ms > BUDGET_MS * 2: use_fallback[size] = true
 	return {"size": size, "tier": tier, "givens": p.givens, "solution": p.solution, "id": "gen_%d_%d_%d" % [size, tier, seed_value]}
