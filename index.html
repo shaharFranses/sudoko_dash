@@ -129,7 +129,54 @@ window.SD_CG = (function () {
   };
 })();
 </script>
-<style>body{background:#bfe3ef;} #status{background:#bfe3ef;}</style>
+<style>
+html, body, canvas { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+body { background: #bfe3ef; } #status { background: #bfe3ef; }
+</style>
+<script>
+/* No context menu / long-press menu; resume Web Audio on first gesture (iOS/Safari autoplay policy). */
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, true);
+(function () {
+  /* Track every Web Audio context Godot creates, and gate it: running only when
+     no ad is playing AND the tab is visible AND the window has focus. Ad state is authoritative. */
+  var ctxs = window.__sdAudioCtxs = [];
+  var st = { ad: false, focused: true };
+  function shouldRun() { return !st.ad && !document.hidden && st.focused; }
+  function apply() {
+    var run = shouldRun();
+    ctxs.forEach(function (c) {
+      try {
+        if (run && c.state === 'suspended') c.__sdResume();
+        else if (!run && c.state === 'running') c.suspend();
+      } catch (e) {}
+    });
+  }
+  ['AudioContext', 'webkitAudioContext'].forEach(function (n) {
+    var C = window[n]; if (!C) return;
+    var W = function (a, b) {
+      var c = new C(a, b); ctxs.push(c);
+      /* The engine also resumes on gestures; refuse while gated (ad / hidden / blurred). */
+      c.__sdResume = c.resume.bind(c);
+      c.resume = function () { return shouldRun() ? c.__sdResume() : Promise.resolve(); };
+      setTimeout(apply, 0); return c;
+    };
+    W.prototype = C.prototype; window[n] = W;
+  });
+  window.SD_AUDIO = {
+    setAd: function (on) { st.ad = !!on; apply(); },
+    state: function () { return { ad: st.ad, hidden: document.hidden, focused: st.focused, contexts: ctxs.map(function (c) { return c.state; }) }; },
+    apply: apply
+  };
+  document.addEventListener('visibilitychange', apply, true);
+  window.addEventListener('blur', function () { st.focused = false; apply(); }, true);
+  window.addEventListener('focus', function () { st.focused = true; apply(); }, true);
+  /* First gesture: browsers require a user gesture to start audio (iOS/Safari). */
+  ['pointerdown', 'touchend', 'keydown', 'mousedown'].forEach(function (ev) {
+    document.addEventListener(ev, function () { st.focused = true; apply(); }, true);
+  });
+})();
+</script>
 
 	</head>
 	<body>
@@ -149,7 +196,7 @@ window.SD_CG = (function () {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3567600,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3576768,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
