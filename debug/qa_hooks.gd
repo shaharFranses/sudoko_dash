@@ -1,5 +1,6 @@
 ## QA hooks H1-H6 (debug builds only; excluded from the release export).
-## Web: window.SD_DEBUG.{setAdMode(m), setClockOffsetMs(ms), setCoins(n), setTokens(n), resetSecondChanceCap(), startLevel(n 1-20), dump()}
+## Web: window.SD_DEBUG.{setAdMode(m), setClockOffsetMs(ms), setCoins(n), setTokens(n), resetSecondChanceCap(), startLevel(n 1-20), dump(),
+##      show(screen), solve(), rect(nodeName) -> window.__sdRect (CSS px), layout() -> window.__sdLayout}
 ##      window.SD_QA (state), window.__adsLog (H2), window.__midgame (H3), window.__sdDump (H5).
 ##      URL ?ads=available|unavailable|error|timeout (H1), ?clock=<offset ms>.
 ## Keys: F6 cycle ad mode, F7 dump state, F8 +25h clock offset.
@@ -28,6 +29,10 @@ func _ready() -> void:
 		"resetSecondChanceCap": func(_a): reset_sc_cap(),
 		"startLevel": func(a): if _main(): _main().start_level(clampi(int(a[0]) - 1, 0, 19)),
 		"dump": func(_a): pass,
+		"show": func(a): show_screen(str(a[0])),
+		"solve": func(_a): solve_current(),
+		"rect": func(a): JavaScriptBridge.eval("window.__sdRect = %s" % JSON.stringify(node_rect(str(a[0])))),
+		"layout": func(_a): JavaScriptBridge.eval("window.__sdLayout = %s" % JSON.stringify(layout_info())),
 	}
 	for k in defs:
 		var f: Callable = defs[k]
@@ -36,6 +41,56 @@ func _ready() -> void:
 		dbg[k] = cb
 
 func _main(): return _dbg().main
+
+## Mobile/layout QA: jump to a screen ("title", "harbour", "hint", "settings", "results").
+func show_screen(n: String) -> void:
+	var m = _main()
+	if m == null: return
+	match n:
+		"title": m.show_title()
+		"harbour": m.show_harbour()
+		"hint": if m.screen_name == "grid": m._open_hint_panel()
+		"settings": if m.has_method("show_settings"): m.show_settings()
+		"results": solve_current()
+
+## Fill every remaining cell with its solution (through the normal input path) -> results screen.
+func solve_current() -> void:
+	var m = _main()
+	if m == null or m.board == null: return
+	m.digit_lock = 0
+	m.notes_mode = false
+	if m.overlay: m._close_overlay()
+	var b = m.board
+	for i in b.cells.size():
+		if m.board == null: return
+		if b.cells[i] != b.solution[i] and not b.is_given(i):
+			m._on_cell(i)
+			m._on_digit(b.solution[i])
+
+## Rect of the first node with this name, in CSS px of the page (null if absent).
+func node_rect(n: String):
+	var m = _main()
+	if m == null: return null
+	var nd = m.find_child(n, true, false)
+	if nd == null or not (nd is Control) or not nd.is_visible_in_tree(): return null
+	var r: Rect2 = nd.get_global_rect()
+	var t: Transform2D = m.get_viewport().get_final_transform()
+	var css = _css_per_px()
+	var p = t * r.position
+	var q = t * r.end
+	return {"x": p.x / css, "y": p.y / css, "w": (q.x - p.x) / css, "h": (q.y - p.y) / css}
+
+func _css_per_px() -> float:
+	if not OS.has_feature("web"): return 1.0
+	return float(JavaScriptBridge.eval("(function(){var c=document.querySelector('canvas');return c&&c.clientWidth?c.width/c.clientWidth:window.devicePixelRatio||1;})()"))
+
+func layout_info() -> Dictionary:
+	var m = _main()
+	var vp = m.get_viewport_rect().size if m else Vector2.ZERO
+	var d = {"viewport": [vp.x, vp.y], "window": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
+		"scale": m.get_viewport().get_final_transform().get_scale().x if m else 0.0, "cssPerPx": _css_per_px()}
+	if m and m.has_method("layout_info"): d.merge(m.layout_info())
+	return d
 
 ## Accepts "available|unavailable|error|timeout" (QA_TEST_PLAN H1) or full names.
 static func norm_mode(q: String) -> String:

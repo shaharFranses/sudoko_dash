@@ -11,6 +11,7 @@ const GridView = preload("res://ui/grid_view.gd")
 const Obj = preload("res://game/objectives.gd")
 const Levels = preload("res://game/levels.gd")
 const HarbourView = preload("res://ui/harbour_view.gd")
+const UiLayout = preload("res://game/ui_layout.gd")
 
 var profile = Profile.new()
 var source = Source.new()
@@ -42,6 +43,16 @@ var tide_bar: ProgressBar
 var timer_debug_label: Label
 const GRID_MARGIN = 10
 var last_teach: Dictionary = {}   # checker format: {cell,value} | {eliminations} | {flag}
+# ---- mobile / responsive (game/ui_layout.gd) ----
+var compact: bool = false          # portrait one-column layout (set per screen build)
+var css_size: Vector2 = Vector2.ZERO   # page size in CSS px (web) / window px (desktop, dpr 1)
+var units_per_css: float = 1.0     # logical units per CSS px
+var safe_css: Array = [0.0, 0.0, 0.0, 0.0]   # safe-area insets (CSS px): top, right, bottom, left
+var _relayout_queued: bool = false
+var _ad_busy: bool = false         # a rewarded ad is running (panel buttons stay locked across relayouts)
+var _results: Dictionary = {}      # results screen state, kept so a resize can rebuild it
+var _settings_back: String = "title"
+var _touch: bool = false
 
 func _ready() -> void:
 	Dbg.main = self
@@ -49,9 +60,12 @@ func _ready() -> void:
 	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
 	if not d.is_empty(): profile.from_dict(d)
+	Sfx.set_reason("user", not profile.sound_on)
+	_touch = DisplayServer.is_touchscreen_available()
 	var bg = ColorRect.new(); bg.color = Color("bfe3ef"); bg.set_anchors_preset(PRESET_FULL_RECT); add_child(bg)
 	root = Control.new(); root.set_anchors_preset(PRESET_FULL_RECT); add_child(root)
-	get_viewport().size_changed.connect(_relayout)
+	apply_view()
+	get_viewport().size_changed.connect(_on_size_changed)
 	show_title()
 
 func save() -> void:
@@ -62,28 +76,108 @@ func save() -> void:
 
 func _clear() -> void:
 	overlay = null
+	var vp = get_viewport_rect().size
+	compact = UiLayout.is_compact(vp)
 	for c in root.get_children():
 		root.remove_child(c)
 		c.queue_free()
 
+## Page resized / rotated: refit the logical viewport, then rebuild the current screen once (deferred).
+func _on_size_changed() -> void:
+	apply_view()
+	if not _relayout_queued:
+		_relayout_queued = true
+		call_deferred("_deferred_relayout")
+
+func _deferred_relayout() -> void:
+	_relayout_queued = false
+	apply_view()
+	_relayout()
+
+## Page CSS size, device pixel ratio and safe-area insets -> window content scale + root insets.
+func apply_view() -> void:
+	var win = get_tree().root
+	var dpr = 1.0
+	if OS.has_feature("web"):
+		dpr = float(JavaScriptBridge.eval("window.devicePixelRatio || 1"))
+		var ins = JavaScriptBridge.eval("window.SD_VIEW ? window.SD_VIEW.insets().join(',') : '0,0,0,0'")
+		var parts = str(ins).split(",")
+		if parts.size() == 4:
+			for k in 4: safe_css[k] = maxf(0.0, float(parts[k]))
+	else:
+		dpr = maxf(1.0, DisplayServer.screen_get_scale())
+		if DisplayServer.get_name() == "headless": dpr = 1.0
+	if dpr <= 0.0: dpr = 1.0
+	css_size = Vector2(win.size) / dpr
+	var ls = UiLayout.logical_size(css_size)
+	var base = Vector2i(UiLayout.DESKTOP_BASE) if ls == Vector2.ZERO else Vector2i(ls)
+	if win.content_scale_size != base: win.content_scale_size = base
+	units_per_css = UiLayout.units_per_css(css_size)
+	if root:
+		root.offset_top = safe_css[0] * units_per_css
+		root.offset_right = -safe_css[1] * units_per_css
+		root.offset_bottom = -safe_css[2] * units_per_css
+		root.offset_left = safe_css[3] * units_per_css
+
+## Rebuild the current screen for the new size. A run in progress keeps its board, selection, notes mode,
+## digit lock, timer and any open panel / hint highlight.
 func _relayout() -> void:
 	match screen_name:
-		"grid": _build_grid_screen()
+		"grid":
+			var kind = "" if overlay == null else str(overlay.name)
+			var keep = {"teach": grid_view.teach_cells if grid_view else [], "flag": grid_view.flag_cells if grid_view else [],
+				"elims": grid_view.teach_elims if grid_view else [], "text": teach_label.text if is_instance_valid(teach_label) else ""}
+			_build_grid_screen()
+			grid_view.teach_cells = keep.teach; grid_view.flag_cells = keep.flag; grid_view.teach_elims = keep.elims
+			teach_label.text = keep.text
+			if kind == "HintPanel": _open_hint_panel()
+			elif kind == "SecondChancePanel": _open_second_chance()
+			if overlay and _ad_busy: _lock_overlay()
 		"harbour": show_harbour()
+		"title": _build_title()
+		"results": _build_results()
+		"restored": show_area_restored()
+		"settings": show_settings()
+
+## Layout facts for QA hooks / tests.
+func layout_info() -> Dictionary:
+	return {"screen": screen_name, "compact": compact, "cssSize": [css_size.x, css_size.y], "unitsPerCss": units_per_css,
+		"safeCss": safe_css, "touch": _touch, "overlay": "" if overlay == null else str(overlay.name)}
 
 # ---------------- widgets ----------------
 func _btn(text: String, cb: Callable, fs: int = 26, min_h: int = 64) -> Button:
 	var b = Button.new()
 	b.text = text
+	if compact:   # portrait (720-wide base): text scaled for the base, never below the 88-unit touch target
+		fs = int(round(fs * 0.85 * UiLayout.COMPACT_SCALE))
+		min_h = maxi(UiLayout.COMPACT_MIN_BTN, int(round(min_h * 0.85 * UiLayout.COMPACT_SCALE)))
 	b.custom_minimum_size = Vector2(0, min_h)
 	b.add_theme_font_size_override("font_size", fs)
+	if _touch:   # no sticky hover highlight after a tap on touch screens
+		b.ready.connect(_no_hover.bind(b), CONNECT_ONE_SHOT)
 	b.pressed.connect(func(): Sfx.play("tap"))
-	b.pressed.connect(cb)
+	if _touch:   # touch: run the action after the tap's own event handling (it may free this button)
+		b.pressed.connect(func(): cb.call_deferred())
+	else:
+		b.pressed.connect(cb)
 	return b
+
+## Touch: hover looks like normal. Resolved once the button is in the tree, so it copies whatever Theme
+## is active there (the art kit theme can be dropped in on the root without code changes).
+func _no_hover(b: Button) -> void:
+	for st in [["hover", "normal"], ["hover_pressed", "pressed"]]:
+		b.add_theme_stylebox_override(st[0], b.get_theme_stylebox(st[1]))
+	b.add_theme_color_override("font_hover_color", b.get_theme_color("font_color"))
+	b.add_theme_color_override("font_hover_pressed_color", b.get_theme_color("font_pressed_color"))
+
+## Compact layout distances are authored for a 420-wide screen; scale them to the 720 base.
+func _u(x: float) -> int:
+	return int(round(x * (UiLayout.COMPACT_SCALE if compact else 1.0)))
 
 func _label(text: String, fs: int = 24, col: Color = Color("1f2f3a")) -> Label:
 	var l = Label.new()
 	l.text = text
+	if compact: fs = int(round(fs * 0.85 * UiLayout.COMPACT_SCALE))
 	l.add_theme_font_size_override("font_size", fs)
 	l.add_theme_color_override("font_color", col)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -96,10 +190,20 @@ func _center_box(min_w: int = 520) -> VBoxContainer:
 	var sb = StyleBoxFlat.new(); sb.bg_color = Color("fffaf0"); sb.set_corner_radius_all(18); sb.set_content_margin_all(24)
 	panel.add_theme_stylebox_override("panel", sb)
 	cc.add_child(panel)
-	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(min(min_w, get_viewport_rect().size.x - 40), 0)
-	v.add_theme_constant_override("separation", 12)
+	if compact: sb.set_content_margin_all(_u(16))
+	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(_panel_w(min_w), 0)
+	v.add_theme_constant_override("separation", _u(12))
 	panel.add_child(v)
+	_wrap_buttons(v)
 	return v
+
+## Compact layout: long button labels wrap instead of pushing the panel off-screen.
+func _wrap_buttons(v: Control) -> void:
+	if not compact: return
+	v.child_entered_tree.connect(func(n):
+		if n is Button:
+			n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			n.size_flags_horizontal = SIZE_EXPAND_FILL)
 
 ## Coin-priced button: disabled with price + "Need N more coins" line when unaffordable (never hidden).
 func _coin_option(parent: Control, text: String, price: int, cb: Callable) -> void:
@@ -112,6 +216,11 @@ func _coin_option(parent: Control, text: String, price: int, cb: Callable) -> vo
 
 # ---------------- title / harbour ----------------
 func show_title() -> void:
+	_build_title()
+	print("[SD] title ready")
+	Store.loading_stop()
+
+func _build_title() -> void:
 	screen_name = "title"
 	Ads.set_context("menu")
 	_clear()
@@ -121,8 +230,30 @@ func show_title() -> void:
 	var play = _btn("Play", show_harbour, 34, 80)
 	play.name = "PlayButton"
 	v.add_child(play)
-	print("[SD] title ready")
-	Store.loading_stop()
+	var st = _btn("Settings", func(): show_settings("title"), 24, 56)
+	st.name = "SettingsButton"
+	v.add_child(st)
+
+# ---------------- settings ----------------
+func show_settings(back: String = "") -> void:
+	if back != "": _settings_back = back
+	screen_name = "settings"
+	Ads.set_context("menu")
+	_clear()
+	var v = _center_box()
+	v.add_child(_label("Settings", 44))
+	var sb = _btn("Sound: On" if profile.sound_on else "Sound: Off", _toggle_sound, 26, 64)
+	sb.name = "SoundButton"
+	v.add_child(sb)
+	var bb = _btn("Back", func(): show_harbour() if _settings_back == "harbour" else _build_title(), 24, 64)
+	bb.name = "SettingsBack"
+	v.add_child(bb)
+
+func _toggle_sound() -> void:
+	profile.sound_on = not profile.sound_on
+	Sfx.set_reason("user", not profile.sound_on)
+	save()
+	show_settings()
 
 func show_harbour() -> void:
 	screen_name = "harbour"
@@ -141,12 +272,20 @@ func show_harbour() -> void:
 	hv.size_flags_horizontal = SIZE_EXPAND_FILL; hv.size_flags_vertical = SIZE_EXPAND_FILL
 	hv.custom_minimum_size = Vector2(300, 220)
 	box.add_child(hv)
-	var sc = ScrollContainer.new(); sc.custom_minimum_size = Vector2(460 if landscape else vp.x, 0 if landscape else vp.y * 0.55)
+	var av = avail_size()
+	var sc = ScrollContainer.new(); sc.custom_minimum_size = Vector2(460 if landscape else av.x, 0 if landscape else av.y * 0.55)
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.name = "HarbourScroll"
 	box.add_child(sc)
 	var v = VBoxContainer.new(); v.size_flags_horizontal = SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 8)
-	sc.add_child(v)
+	if compact:   # side margins so buttons don't touch the screen edge
+		var hm = MarginContainer.new(); hm.size_flags_horizontal = SIZE_EXPAND_FILL
+		for side_name in ["margin_left", "margin_right", "margin_bottom"]: hm.add_theme_constant_override(side_name, _u(GRID_MARGIN))
+		sc.add_child(hm)
+		hm.add_child(v)
+	else:
+		sc.add_child(v)
 	v.add_child(_label("Harbour  |  Stars %d   Coins %d   Tokens %d" % [profile.stars, profile.coins, profile.tokens], 24))
 	if profile.current_grid.has("board"):
 		v.add_child(_btn("Resume grid", resume_grid, 28, 72))
@@ -182,6 +321,9 @@ func show_harbour() -> void:
 		v.add_child(row)
 	if profile.area_restored():
 		v.add_child(_btn("Area restored!", show_area_restored, 24))
+	var stb = _btn("Settings", func(): show_settings("harbour"), 22, 56)
+	stb.name = "SettingsButton"
+	v.add_child(stb)
 
 func _buy_task(id: String) -> void:
 	if profile.buy_task(id):
@@ -266,8 +408,15 @@ func _enter_grid() -> void:
 func _build_grid_screen() -> void:
 	var sel = grid_view.selected if grid_view else -1
 	_clear()
+	if compact:
+		_build_grid_compact(sel)
+		_refresh()
+		return
 	var vp = get_viewport_rect().size
 	var landscape = vp.x >= vp.y
+	# Phone landscape (logical height < 600; desktop/tablet bases are >= 720): tighter rows, two-row pad.
+	var short = landscape and vp.y < 600
+	var bh = 56 if short else 64
 	# Safe margin so the grid's outer border and the side column never touch the canvas edge
 	# (QA run 6: bottom border clipped at 1280x800 in Chrome).
 	var mc = MarginContainer.new(); mc.set_anchors_preset(PRESET_FULL_RECT)
@@ -277,23 +426,76 @@ func _build_grid_screen() -> void:
 	var outer = VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 6)
 	mc.add_child(outer)
-	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, 64)
+	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, bh)
 	outer.add_child(top)
-	top.add_child(_btn("Back", _leave_grid, 26, 60))
-	var title = "Level %d/%d" % [grid_meta.path_index + 1, Profile.path_length()] if grid_meta.mode == "path" else ("Quick 6x6" if grid_meta.mode == "quick" else "Classic 9x9 T%d" % grid_meta.tier)
-	var tl = _label(title, 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
+	var back = _btn("Back", _leave_grid, 26, 56 if short else 60); back.name = "BackButton"
+	top.add_child(back)
+	var tl = _label(_grid_title(), 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
 	tl.autowrap_mode = TextServer.AUTOWRAP_OFF; tl.clip_text = true
 	top.add_child(tl)
 	mistakes_label = _label("", 24)
+	mistakes_label.name = "MistakesLabel"
 	mistakes_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	top.add_child(mistakes_label)
-	var hint = _btn("Hint", _open_hint_panel, 26, 60); hint.name = "HintButton"
+	var hint = _btn("Hint", _open_hint_panel, 26, 56 if short else 60); hint.name = "HintButton"
 	top.add_child(hint)
 	var body = HBoxContainer.new() if landscape else VBoxContainer.new()
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 12)
 	outer.add_child(body)
+	_make_grid_view(sel)
+	body.add_child(grid_view)
+	var side = VBoxContainer.new()
+	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x - 2 * GRID_MARGIN, 0 if landscape else min(vp.y * 0.38, 360))
+	side.add_theme_constant_override("separation", 8)
+	body.add_child(side)
+	objective_label = _label("", 22, Color("1d4f73"))
+	objective_label.name = "ObjectiveLabel"
+	side.add_child(objective_label)
+	_make_tide_bar(side, 18)
+	teach_label = _label("", 20, Color("6a4b00"))
+	teach_label.name = "TeachLabel"
+	side.add_child(teach_label)
+	var pad = GridContainer.new()
+	pad.name = "DigitPad"
+	pad.columns = UiLayout.pad_columns(board.size, not landscape or short)
+	pad.size_flags_vertical = SIZE_EXPAND_FILL
+	pad.add_theme_constant_override("h_separation", 8); pad.add_theme_constant_override("v_separation", 8)
+	side.add_child(pad)
+	for d in range(1, board.size + 1):
+		var b = _btn(str(d), _on_digit.bind(d), 34, bh)
+		b.name = "Digit%d" % d
+		b.custom_minimum_size = Vector2(56, 56) if short else Vector2(64, 64)
+		b.size_flags_horizontal = SIZE_EXPAND_FILL; b.size_flags_vertical = SIZE_EXPAND_FILL
+		b.toggle_mode = true
+		b.button_pressed = digit_lock == d
+		pad.add_child(b)
+	var tools = HBoxContainer.new(); tools.add_theme_constant_override("separation", 8)
+	side.add_child(tools)
+	notes_btn = _btn("Notes: OFF", _toggle_notes, 22, bh); notes_btn.name = "NotesButton"
+	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL
+	tools.add_child(notes_btn)
+	var ub = _btn("Undo", _undo, 22, bh); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
+	tools.add_child(ub)
+	var eb = _btn("Erase", _erase, 22, bh); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
+	if short and board.size > 6:
+		eb.size_flags_vertical = SIZE_EXPAND_FILL
+		pad.add_child(eb)   # 9x9: Erase fills the 10th pad slot (5 + 5)
+	else:
+		tools.add_child(eb)
+	status_label = _label("", 18, Color("40505a"))
+	status_label.name = "StatusLabel"
+	status_label.visible = not short   # no room on a phone held sideways; the pad covers every action
+	side.add_child(status_label)
+	_refresh()
+
+func _grid_title() -> String:
+	if grid_meta.mode == "path": return "Level %d/%d" % [grid_meta.path_index + 1, Profile.path_length()]
+	return "Quick 6x6" if grid_meta.mode == "quick" else "Classic 9x9 T%d" % grid_meta.tier
+
+func _make_grid_view(sel: int) -> void:
 	grid_view = GridView.new()
+	grid_view.name = "GridView"
 	grid_view.board = board
 	grid_view.selected = sel
 	grid_view.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -303,62 +505,94 @@ func _build_grid_screen() -> void:
 	grid_view.target_cells = [] if (not level.is_empty() and str(level.params.get("inner", level.objective)) == "digit") else targets
 	grid_view.lantern_path = []
 	if not level.is_empty():
-		var inner = str(level.params.get("inner", level.objective))
 		if level.objective == "lantern":
 			for rc in level.params.path: grid_view.lantern_path.append(int(rc[0]) * board.size + int(rc[1]))
-	body.add_child(grid_view)
-	var side = VBoxContainer.new()
-	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x - 2 * GRID_MARGIN, 0 if landscape else min(vp.y * 0.38, 360))
-	side.add_theme_constant_override("separation", 8)
-	body.add_child(side)
-	objective_label = _label("", 22, Color("1d4f73"))
-	objective_label.name = "ObjectiveLabel"
-	side.add_child(objective_label)
+
+func _make_tide_bar(parent: Control, h: int) -> void:
 	tide_bar = ProgressBar.new()
 	tide_bar.name = "TideBar"
 	tide_bar.show_percentage = false
-	tide_bar.custom_minimum_size = Vector2(0, 18)
+	tide_bar.custom_minimum_size = Vector2(0, h)
 	tide_bar.visible = not level.is_empty() and Obj.is_timed(level)
-	side.add_child(tide_bar)
+	parent.add_child(tide_bar)
 	timer_debug_label = null
 	if Dbg.enabled:   # H7: on-screen timer readout (debug builds only)
 		timer_debug_label = _label("", 16, Color("7a2a2a"))
 		timer_debug_label.name = "TimerDebug"
-		side.add_child(timer_debug_label)
-	teach_label = _label("", 20, Color("6a4b00"))
-	side.add_child(teach_label)
+		parent.add_child(timer_debug_label)
+
+## Portrait phones/tablets: one column. Top bar (Back, level, mistakes), objective + tide bar,
+## full-width square grid, hint text, digit pad, tools (Notes, Erase, Undo, Hint). Every control is
+## >= 52 logical units (>= 44 CSS px at the narrowest 360 px page); no keyboard needed.
+func _build_grid_compact(sel: int) -> void:
+	var mc = MarginContainer.new(); mc.set_anchors_preset(PRESET_FULL_RECT)
+	for side_name in ["margin_left", "margin_right", "margin_bottom"]: mc.add_theme_constant_override(side_name, _u(8))
+	mc.add_theme_constant_override("margin_top", _u(4))
+	root.add_child(mc)
+	var outer = VBoxContainer.new()
+	outer.add_theme_constant_override("separation", _u(6))
+	mc.add_child(outer)
+	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", _u(6))
+	outer.add_child(top)
+	var back = _btn("Back", _leave_grid, 24, 56); back.name = "BackButton"
+	back.custom_minimum_size.x = _u(72)
+	top.add_child(back)
+	var tl = _label(_grid_title(), 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
+	tl.autowrap_mode = TextServer.AUTOWRAP_OFF; tl.clip_text = true
+	tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	top.add_child(tl)
+	mistakes_label = _label("", 24)
+	mistakes_label.name = "MistakesLabel"
+	mistakes_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	top.add_child(mistakes_label)
+	objective_label = _label("", 24, Color("1d4f73"))
+	objective_label.name = "ObjectiveLabel"
+	outer.add_child(objective_label)
+	_make_tide_bar(outer, _u(14))
+	_make_grid_view(sel)
+	grid_view.custom_minimum_size = Vector2(0, _u(180))
+	outer.add_child(grid_view)
+	teach_label = _label("", 22, Color("6a4b00"))
+	teach_label.name = "TeachLabel"
+	teach_label.custom_minimum_size = Vector2(0, _u(44))   # room for a 2-line hint without the grid jumping
+	teach_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	outer.add_child(teach_label)
 	var pad = GridContainer.new()
-	pad.columns = 3 if board.size == 9 or board.size == 6 else 2
-	if not landscape: pad.columns = board.size if board.size <= 6 else 5
-	pad.size_flags_vertical = SIZE_EXPAND_FILL
-	pad.add_theme_constant_override("h_separation", 8); pad.add_theme_constant_override("v_separation", 8)
-	side.add_child(pad)
+	pad.name = "DigitPad"
+	pad.columns = UiLayout.pad_columns(board.size, true)
+	pad.add_theme_constant_override("h_separation", _u(6)); pad.add_theme_constant_override("v_separation", _u(6))
+	outer.add_child(pad)
 	for d in range(1, board.size + 1):
-		var b = _btn(str(d), _on_digit.bind(d), 34, 64)
+		var b = _btn(str(d), _on_digit.bind(d), 36, 60)
 		b.name = "Digit%d" % d
-		b.custom_minimum_size = Vector2(64, 64)
-		b.size_flags_horizontal = SIZE_EXPAND_FILL; b.size_flags_vertical = SIZE_EXPAND_FILL
+		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		b.toggle_mode = true
 		b.button_pressed = digit_lock == d
 		pad.add_child(b)
-	var tools = HBoxContainer.new(); tools.add_theme_constant_override("separation", 8)
-	side.add_child(tools)
-	notes_btn = _btn("Notes: OFF", _toggle_notes, 22, 64); notes_btn.name = "NotesButton"
-	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL
+	var tools = HBoxContainer.new(); tools.add_theme_constant_override("separation", _u(6))
+	outer.add_child(tools)
+	var tfs = 24 if board.size > 6 else 21   # 6x6 has four tools in the row: keep "Notes: OFF" unclipped
+	var eb = _btn("Erase", _erase, tfs, 60); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
+	if board.size > 6: pad.add_child(eb)   # 9x9: Erase fills the 10th pad slot (5 + 5)
+	notes_btn = _btn("Notes: OFF", _toggle_notes, tfs, 60); notes_btn.name = "NotesButton"
+	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL; notes_btn.clip_text = true
+	if board.size <= 6: notes_btn.size_flags_stretch_ratio = 1.5   # widest label among four tools
 	tools.add_child(notes_btn)
-	var ub = _btn("Undo", _undo, 22, 64); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
+	if board.size <= 6: tools.add_child(eb)
+	var ub = _btn("Undo", _undo, tfs, 60); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
 	tools.add_child(ub)
-	var eb = _btn("Erase", _erase, 22, 64); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
-	tools.add_child(eb)
+	var hint = _btn("Hint", _open_hint_panel, tfs, 60); hint.name = "HintButton"; hint.size_flags_horizontal = SIZE_EXPAND_FILL
+	tools.add_child(hint)
 	status_label = _label("", 18, Color("40505a"))
-	side.add_child(status_label)
-	_refresh()
+	status_label.name = "StatusLabel"
+	status_label.visible = false   # keyboard help is for desktop; phones use the pad
+	outer.add_child(status_label)
 
 func _refresh() -> void:
 	if board == null or grid_view == null: return
 	mistakes_label.text = ("Mistakes %d/%d" % [board.mistakes, board.max_mistakes]) if board.max_mistakes > 0 else "Warm-up: no mistake limit"
 	notes_btn.text = "Notes: ON" if notes_mode else "Notes: OFF"
-	status_label.text = "Tap a cell then a digit, or a digit then cells. Keys: 1-%d, arrows, Backspace, N, Ctrl+Z" % board.size
+	status_label.text = ("Tap a cell, then a digit. Or tap a digit, then cells." if _touch else "Tap a cell then a digit, or a digit then cells. Keys: 1-%d, arrows, Backspace, N, Ctrl+Z" % board.size)
 	objective_label.text = Obj.label(level, board.cells, board.solution, targets) if not level.is_empty() else ""
 	_refresh_timer()
 	grid_view.queue_redraw()
@@ -523,10 +757,22 @@ func _open_overlay() -> VBoxContainer:
 	var sb = StyleBoxFlat.new(); sb.bg_color = Color("fffaf0"); sb.set_corner_radius_all(18); sb.set_content_margin_all(24)
 	panel.add_theme_stylebox_override("panel", sb)
 	cc.add_child(panel)
-	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(min(560, get_viewport_rect().size.x - 40), 0)
-	v.add_theme_constant_override("separation", 10)
+	if compact: sb.set_content_margin_all(_u(16))
+	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(_panel_w(560), 0)
+	v.add_theme_constant_override("separation", _u(10))
 	panel.add_child(v)
+	_wrap_buttons(v)
 	return v
+
+## Usable width inside the safe area (logical units).
+func avail_size() -> Vector2:
+	var vp = get_viewport_rect().size
+	return vp - Vector2(safe_css[1] + safe_css[3], safe_css[0] + safe_css[2]) * units_per_css
+
+## Panel content width: desktop unchanged (min(w, vp - 40)); compact leaves 12 px gaps + 16 px padding.
+func _panel_w(w: int) -> float:
+	if compact: return minf(w * UiLayout.COMPACT_SCALE, avail_size().x - _u(56))
+	return minf(w, get_viewport_rect().size.x - 40)
 
 func _close_overlay() -> void:
 	if overlay:
@@ -572,7 +818,9 @@ func _lock_overlay() -> void:
 
 func _ad_for_token() -> void:
 	_lock_overlay()
+	_ad_busy = true
 	var ok = await Ads.rewarded("hint_token")
+	_ad_busy = false
 	if screen_name != "grid" or board == null: return
 	if ok: profile.grant_tokens(1)
 	save()
@@ -669,7 +917,9 @@ func _second_chance(how: String) -> void:
 		if not profile.spend_coins(Profile.CONTINUE_COIN_PRICE): return
 	else:
 		_lock_overlay()
+		_ad_busy = true
 		var ok = await Ads.rewarded("second_chance")
+		_ad_busy = false
 		if screen_name != "grid" or board == null: return
 		if not ok:
 			if overlay:
@@ -711,6 +961,17 @@ func _complete() -> void:
 	_show_results(r)
 
 func _show_results(r: Dictionary) -> void:
+	var offer = policy.results_offer(Time.get_ticks_msec(), Ads.available())
+	print("[SD] results offer = ", offer)
+	_results = {"r": r, "offer": offer, "doubled": false}
+	_build_results()
+	if offer == "midgame":
+		await Ads.midgame("results")
+	Dbg.publish()
+
+## Results UI from _results (also used to rebuild it after a resize without re-running the ad offer).
+func _build_results() -> void:
+	var r: Dictionary = _results.r
 	screen_name = "results"
 	_clear()
 	var v = _center_box()
@@ -719,35 +980,37 @@ func _show_results(r: Dictionary) -> void:
 		var sl = _label("Stars: %d / 3" % r.level_stars, 30, Color("b8860b"))
 		sl.name = "LevelStars"
 		v.add_child(sl)
-	results_label = _label("+%d coins   +%d stars%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")], 28)
+	results_label = _label("+%d coins   +%d stars%s%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else ""), ("  (doubled!)" if _results.doubled else "")], 28)
 	results_label.name = "ResultsRewards"
 	results_label.set_meta("r", r)
 	v.add_child(results_label)
-	var offer = policy.results_offer(Time.get_ticks_msec(), Ads.available())
-	print("[SD] results offer = ", offer)
-	if offer == "rewarded":
-		var cb = r.coins
+	if _results.offer == "rewarded" and not _results.doubled:
+		var cb = int(_results.get("base_coins", r.coins))
+		_results["base_coins"] = cb
 		var ab = _btn("Double coins (watch an ad)", func(): _double(cb))
 		ab.name = "RewardedDouble"
+		ab.disabled = _ad_busy
 		v.add_child(ab)
 	v.add_child(_btn("Continue", show_harbour, 28, 72))
-	if offer == "midgame":
-		await Ads.midgame("results")
-	Dbg.publish()
 
 func _double(c: int) -> void:
 	var b = root.find_child("RewardedDouble", true, false)
 	if b: b.disabled = true
+	_ad_busy = true
 	var ok = await Ads.rewarded("double_coins")
+	_ad_busy = false
+	b = root.find_child("RewardedDouble", true, false)   # the screen may have been rebuilt (rotation) during the ad
 	if ok:
 		profile.coins += c
 		save()
+		var rr: Dictionary = _results.get("r", results_label.get_meta("r") if is_instance_valid(results_label) else {})
+		if not rr.is_empty(): rr.coins = rr.coins + c
+		if _results.has("r"): _results.doubled = true
 		if is_instance_valid(b):
 			b.get_parent().remove_child(b)
 			b.queue_free()
 		if is_instance_valid(results_label):
 			var r: Dictionary = results_label.get_meta("r")
-			r.coins = r.coins + c
 			results_label.text = "+%d coins   +%d stars%s  (doubled!)" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else "")]
 	elif is_instance_valid(b):
 		b.disabled = false

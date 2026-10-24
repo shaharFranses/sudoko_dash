@@ -65,9 +65,9 @@ func origin() -> Vector2:
 func _gui_input(e: InputEvent) -> void:
 	if board == null: return
 	var pos = Vector2.ZERO
+	# Touch arrives as an emulated left click (input_devices/pointing/emulate_mouse_from_touch, default on).
+	# Handling InputEventScreenTouch as well made one tap select/apply twice (a note toggled on and back off).
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
-		pos = e.position
-	elif e is InputEventScreenTouch and e.pressed:
 		pos = e.position
 	else:
 		return
@@ -111,7 +111,8 @@ func _draw() -> void:
 			# notes laid out in a box_w x box_h mini grid (6x6: 3x2)
 			var cols = bw if n != 4 else 2
 			var rows = int(ceil(float(n) / cols))
-			var fs2 = int(cp / max(rows, cols) * 0.8)
+			# Notes font = their mini cell (glyphs ~70% of it); 9x9 on a 360 px phone: ~11 CSS px.
+			var fs2 = int(cp / max(rows, cols))
 			for dd in range(1, n + 1):
 				if board.notes[i] & (1 << (dd - 1)):
 					var k = dd - 1
@@ -119,7 +120,7 @@ func _draw() -> void:
 					var cell_h = cp / rows
 					var t = str(dd)
 					var ts2 = font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2)
-					var nc = Color("5c7080")
+					var nc = Color("4a5d6b")
 					for el in teach_elims:
 						if el[0] == i and el[1] == dd: nc = C_WRONG
 					draw_string(font, r.position + Vector2((k % cols) * cell_w + (cell_w - ts2.x) / 2.0, (k / cols) * cell_h + (cell_h + font.get_ascent(fs2) - font.get_descent(fs2)) / 2.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, nc)

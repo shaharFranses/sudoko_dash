@@ -49,11 +49,54 @@ window.SD_CG = (function () {
   };
 })();
 </script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <style>
 html, body, canvas { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
   -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+/* Mobile: the page never scrolls, bounces or zooms; the canvas owns every touch. */
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { position: fixed; inset: 0; }
+/* Safe-area insets (notch / home bar), read by the game through SD_VIEW.insets(). */
+:root { --sd-sat: env(safe-area-inset-top, 0px); --sd-sar: env(safe-area-inset-right, 0px);
+  --sd-sab: env(safe-area-inset-bottom, 0px); --sd-sal: env(safe-area-inset-left, 0px); }
 body { background: #bfe3ef; } #status { background: #bfe3ef; }
 </style>
+<script>
+/* Mobile view glue: one viewport meta (ours, the last), safe-area insets for the game, and no browser
+   zoom / scroll gestures (iOS Safari ignores user-scalable=no, so pinch and double-tap are blocked here). */
+(function () {
+  function dedupeViewport() {
+    var m = document.querySelectorAll('meta[name=viewport]');
+    for (var i = 0; i < m.length - 1; i++) m[i].parentNode.removeChild(m[i]);
+  }
+  dedupeViewport();
+  document.addEventListener('DOMContentLoaded', dedupeViewport);
+  window.SD_VIEW = {
+    insets: function () {
+      var s = getComputedStyle(document.documentElement);
+      return ['--sd-sat', '--sd-sar', '--sd-sab', '--sd-sal'].map(function (k) { return parseFloat(s.getPropertyValue(k)) || 0; });
+    }
+  };
+  var opt = { passive: false };
+  ['gesturestart', 'gesturechange', 'gestureend', 'dblclick'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); }, opt);
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, opt);
+  var lastEnd = 0;
+  document.addEventListener('touchend', function (e) {   /* iOS double-tap zoom */
+    var t = Date.now(); if (t - lastEnd < 350 && e.cancelable) e.preventDefault(); lastEnd = t;
+  }, opt);
+  window.addEventListener('scroll', function () { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); });
+  /* Some mobile browsers report the old size right after rotating: re-announce it once it settles. */
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 300);
+  });
+})();
+</script>
 <script>
 /* No context menu / long-press menu; resume Web Audio on first gesture (iOS/Safari autoplay policy). */
 document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, true);
@@ -67,7 +110,8 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, t
     var run = shouldRun();
     ctxs.forEach(function (c) {
       try {
-        if (run && c.state === 'suspended') c.__sdResume();
+        /* iOS Safari can also leave a context 'interrupted' (calls, Siri, lock screen). */
+        if (run && c.state !== 'running' && c.state !== 'closed') c.__sdResume();
         else if (!run && c.state === 'running') c.suspend();
       } catch (e) {}
     });
