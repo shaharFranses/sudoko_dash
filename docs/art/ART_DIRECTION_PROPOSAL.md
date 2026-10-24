@@ -1,6 +1,6 @@
 # Sudoku Dash — Art Direction Proposal
 
-**Status: PROPOSED — pending Shahar approval.** Nothing here is integrated into the game yet. No game code, scenes or export settings were changed. `docs/.gdignore` keeps everything under `docs/` out of the Godot import and export.
+**Status: APPROVED by Shahar on 2026-10-24 (as proposed). Production assets: see [STYLE_GUIDE.md](STYLE_GUIDE.md).** Nothing here is integrated into the game yet. No game code, scenes or export settings were changed. `docs/.gdignore` keeps everything under `docs/` out of the Godot import and export.
 
 - Author: SD Art (art lead), 2026-10-24
 - Target: Godot 4.3, web export (1280x720 landscape, `canvas_items` stretch), CrazyGames first, then Poki and GameDistribution

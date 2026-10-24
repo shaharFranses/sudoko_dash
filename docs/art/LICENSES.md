@@ -1,28 +1,40 @@
 # Art licenses log (Sudoku Dash)
 
-Status: **PROPOSED**. None of these assets is in the game or the export yet. Add a row whenever an art asset enters the repo.
+Art direction **approved 2026-10-24**. Art kit v1 is in `assets/art/` (branch `art/assets-v1`). It is **not yet wired into any scene**.
+Add a row whenever an art asset enters the repo.
 
-## Fonts (proposed, not yet added to the project)
-| Asset | Source | License | Verified | Notes |
+> Shipping note: export preset uses `export_filter="all_resources"`, so everything imported under `assets/art/` ships in the `.pck` even before it's referenced. Measured cost of kit v1: **+0.83 MB pck**. See STYLE_GUIDE.md §8.
+
+## Fonts (shipped: `assets/art/fonts/`)
+| File | Source | License | Modification | Verified |
 |---|---|---|---|---|
-| Fraunces (variable) | https://github.com/undercasetype/Fraunces · https://fonts.google.com/specimen/Fraunces | SIL Open Font License 1.1 | 2026-10-24, upstream `OFL.txt` (Copyright 2018 The Fraunces Project Authors) | Display font. Ship `OFL.txt` alongside the font when added |
-| Atkinson Hyperlegible Next (variable) | https://github.com/googlefonts/atkinson-hyperlegible-next · https://fonts.google.com/specimen/Atkinson+Hyperlegible+Next | SIL Open Font License 1.1 | 2026-10-24, upstream `OFL.txt` (Copyright 2020-2024 The Atkinson Hyperlegible Next Project Authors) | UI and digit font. Ship `OFL.txt` alongside the font when added |
+| `Fraunces-SemiBoldSoft.ttf`, `Fraunces-BoldSoft.ttf` | https://github.com/undercasetype/Fraunces (via google/fonts `ofl/fraunces`) | SIL OFL 1.1, no Reserved Font Name | Static instances of the variable font (wght 600/700, opsz 48, SOFT 100, WONK 0) and Latin subset made with fontTools. Copyright and license kept in name IDs 0/13/14 | 2026-10-24, `OFL-Fraunces.txt` |
+| `AtkinsonHyperlegibleNext-{Regular,Medium,Bold}.ttf` | https://github.com/googlefonts/atkinson-hyperlegible-next (via google/fonts `ofl/atkinsonhyperlegiblenext`) | SIL OFL 1.1, no Reserved Font Name | Static instances (wght 400/500/700) and Latin subset made with fontTools. Name IDs 0/13/14 kept | 2026-10-24, `OFL-AtkinsonHyperlegibleNext.txt` |
 
-## Asset packs (proposed)
-| Asset | Source | License | Verified | Notes |
-|---|---|---|---|---|
-| Kenney Game Icons | https://kenney.nl/assets/game-icons | CC0 1.0 (public domain) | 2026-10-24, asset page states "Creative Commons CC0" | UI glyphs only. Attribution not required, but credit "Kenney (kenney.nl)" as a courtesy |
-| Kenney UI Pack (fallback) | https://kenney.nl/assets/ui-pack | CC0 1.0 | 2026-10-24, asset page states "Creative Commons CC0" | Icons only, if needed |
+The OFL text files sit next to the fonts. The TTFs also carry the copyright and license in their name table, which OFL accepts as "machine-readable metadata". The `.txt` files are not exported by default. Optional extra for Build: add `assets/art/fonts/*.txt` to the Web preset `include_filter`, and/or credit the fonts in an in-game Credits screen.
 
-## Generated mood board images (docs only, excluded from export via `docs/.gdignore`)
-Made with the Grok Bot image generation tool on 2026-10-24, from studio-written prompts. They are owned by the studio for concept and marketing use. Before shipping any derivative as a portal cover, check the portal rules ("art we own") and the terms of the image tool in use.
+## Icons (shipped: `assets/art/icons/`, 100x100 PNG, recoloured to palette ink/cream/gold)
+| Icon | Source file | Pack | License |
+|---|---|---|---|
+| star, settings (gear), sound_on (audioOn), undo (return), lock (locked), back (arrowLeft) | `PNG/White/2x/*.png` | [Kenney Game Icons](https://kenney.nl/assets/game-icons) | CC0 1.0 (pack `license.txt`) |
+| sound_off | `audioOff.png` plus a studio-drawn "x" for clarity | Kenney Game Icons | CC0 1.0 |
+| notes (toolPencil), erase (toolEraser), coin (coin) | `PNG/White/2x/*.png` | [Kenney Game Icons Expansion](https://kenney.nl/assets/game-icons-expansion) (Game Icons has no pencil, eraser or coin) | CC0 1.0 (pack `license.txt`) |
+| hint (light bulb) | drawn by SD Art with PIL (`docs/art/tools/icons.py`) | studio-owned | n/a. Neither Kenney pack has a bulb |
 
-| File | Content | Made by |
-|---|---|---|
-| `moodboard/01_grid_screen.jpg` | Grid screen mockup | Generated background and UI chrome, plus a code-rendered 9x9 grid (`tools/grid_overlay.py`, palette + Atkinson Hyperlegible Next, puzzle `9x9_t1_0000`) |
-| `moodboard/02_harbour_village.jpg` | Harbour village scene | Generated. This is the style reference for all later generations |
-| `moodboard/03_restore_before_after.jpg` | Café before/after | Generated, with 02 used as reference (second attempt; the first was rejected because the before/after difference was too subtle) |
-| `moodboard/04_cover_key_art.jpg` | Cover/key art with the title "Sudoku Dash" | Generated, with 02 used as reference |
-| `moodboard/00_combined_moodboard.jpg` | Combined board with palette swatches and font samples | Composed with `tools/board.py` (PIL) |
+Attribution isn't required for CC0, but "Icons: Kenney (kenney.nl)" in the Credits is a nice courtesy.
 
-`tools/*.py` are helper scripts for docs only. They use box paths and are not part of the game.
+## Generated art (shipped: `assets/art/harbour/`)
+All made 2026-10-24 with the Grok Bot image generation tool, in the locked style from ART_DIRECTION_PROPOSAL.md §5, with `docs/art/moodboard/02_harbour_village.jpg` as the style reference. Prompts were written by the studio. Cutouts use rembg (`isnet-general-use` model, MIT-licensed tool) plus edge decontamination. These are studio-owned assets. Before using them in marketing or portal covers, re-check the image tool's terms.
+
+| File | Content |
+|---|---|
+| `harbour_bg_portrait.webp` (720x1280), `harbour_bg_landscape.webp` (1280x720) | Harbour base scene with empty slots (plinth, open water, quay corner, soil strips, jetty edge) |
+| `task_{dock,boats,flowers,lighthouse,cafe}_{unrestored,restored}.webp` | 10 transparent task sprites. Each before/after pair was generated together as one image so they match, then split |
+
+## Docs-only images (`docs/`, excluded via `docs/.gdignore`)
+| File | Notes |
+|---|---|
+| `moodboard/*.jpg` | Approved mood board. The grid screen's 9x9 grid is rendered in code from puzzle `9x9_t1_0000` |
+| `contact_sheet_v1.jpg`, `theme_preview_v1.jpg` | Kit v1 overview. The theme preview is a real Godot render (`tools/art/theme_preview.gd`) |
+
+`docs/art/tools/*.py` and `tools/art/*` are helper scripts. They aren't shipped (`tools/*` is export-excluded, `docs/` is gdignored). Raw generations and cutouts are kept outside the project, on the art box at `/workspace/sd_art/raw/`.
