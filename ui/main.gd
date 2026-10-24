@@ -40,6 +40,7 @@ var _save_accum: float = 0.0
 var objective_label: Label
 var tide_bar: ProgressBar
 var timer_debug_label: Label
+const GRID_MARGIN = 10
 var last_teach: Dictionary = {}   # checker format: {cell,value} | {eliminations} | {flag}
 
 func _ready() -> void:
@@ -267,9 +268,15 @@ func _build_grid_screen() -> void:
 	_clear()
 	var vp = get_viewport_rect().size
 	var landscape = vp.x >= vp.y
-	var outer = VBoxContainer.new(); outer.set_anchors_preset(PRESET_FULL_RECT)
+	# Safe margin so the grid's outer border and the side column never touch the canvas edge
+	# (QA run 6: bottom border clipped at 1280x800 in Chrome).
+	var mc = MarginContainer.new(); mc.set_anchors_preset(PRESET_FULL_RECT)
+	for side_name in ["margin_left", "margin_right", "margin_bottom"]: mc.add_theme_constant_override(side_name, GRID_MARGIN)
+	mc.add_theme_constant_override("margin_top", 0)
+	root.add_child(mc)
+	var outer = VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 6)
-	root.add_child(outer)
+	mc.add_child(outer)
 	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, 64)
 	outer.add_child(top)
 	top.add_child(_btn("Back", _leave_grid, 26, 60))
@@ -301,7 +308,7 @@ func _build_grid_screen() -> void:
 			for rc in level.params.path: grid_view.lantern_path.append(int(rc[0]) * board.size + int(rc[1]))
 	body.add_child(grid_view)
 	var side = VBoxContainer.new()
-	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x, 0 if landscape else min(vp.y * 0.38, 360))
+	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x - 2 * GRID_MARGIN, 0 if landscape else min(vp.y * 0.38, 360))
 	side.add_theme_constant_override("separation", 8)
 	body.add_child(side)
 	objective_label = _label("", 22, Color("1d4f73"))
@@ -538,6 +545,10 @@ func _open_hint_panel() -> void:
 	v.add_child(_label("Tokens: %d   Coins: %d" % [profile.tokens, profile.coins], 22))
 	var sel = grid_view.selected
 	var can_reveal = sel >= 0 and not board.is_given(sel) and board.cells[sel] != board.solution[sel]
+	if not board.active_hint().is_empty():
+		var again = _btn("Show my last hint again (free)", _reshow_hint)
+		again.name = "ReshowHint"
+		v.add_child(again)
 	if profile.tokens > 0:
 		v.add_child(_btn("Teach me the next step (1 token)", func(): _pay_hint("teach", "token")))
 		var rb = _btn("Reveal selected cell (1 token)", func(): _pay_hint("reveal", "token"))
@@ -571,6 +582,7 @@ func _ad_for_token() -> void:
 	if not ok: teach_label.text = "The ad didn't finish, so no token was added. You can try again."
 
 func _pay_hint(kind: String, how: String) -> void:
+	var s = {}
 	if kind == "teach":
 		var wrong = board.wrong_cells()
 		if not wrong.is_empty():
@@ -580,26 +592,32 @@ func _pay_hint(kind: String, how: String) -> void:
 			teach_label.text = "Some digits are wrong. Fix the highlighted cells first (no charge)."
 			grid_view.queue_redraw()
 			return
+		# Find the step BEFORE charging: a paid Teach must always teach something new.
+		var t0 = Time.get_ticks_usec()
+		var hunt = not level.is_empty() and str(level.params.get("inner", level.objective)) == "digit"
+		s = Sudoku.next_hint(board.correct_board(), board.solution, targets, board.taught, hunt)
+		var ms = (Time.get_ticks_usec() - t0) / 1000.0
+		source.log.append({"size": board.size, "source": "step", "ms": ms, "technique": s.get("technique", "")})
+		print("[SD][timing] step size=%d ms=%.2f" % [board.size, ms])
+		if s.is_empty():
+			_close_overlay()
+			var prev = board.active_hint()
+			if not prev.is_empty():
+				_show_step(prev, "No new step until you use this hint (no charge). ")
+			else:
+				teach_label.text = "No simple step found. Try notes! (no charge)"
+			grid_view.queue_redraw()
+			return
+	else:
+		var sel = grid_view.selected
+		if sel < 0 or board.is_given(sel) or board.cells[sel] == board.solution[sel]: return   # nothing to reveal: never charge
 	var paid = profile.spend_token() if how == "token" else profile.spend_coins(Profile.HINT_COIN_PRICE)
 	if not paid: return
 	_close_overlay()
 	if kind == "teach":
-		var t0 = Time.get_ticks_usec()
-		var s = Sudoku.step_for_targets(board.correct_board(), targets) if not targets.is_empty() else Sudoku.step(board.correct_board())
-		var ms = (Time.get_ticks_usec() - t0) / 1000.0
-		source.log.append({"size": board.size, "source": "step", "ms": ms, "technique": s.get("technique", "")})
-		if s.is_empty():
-			teach_label.text = "No simple step found. Try notes!"
-		else:
-			if Logic.is_placement(s):
-				last_teach = {"cell": [s.cells[0] / board.size, s.cells[0] % board.size], "value": s.value, "technique": s.technique}
-			else:
-				last_teach = {"eliminations": s.eliminations.map(func(e): return [e[0] / board.size, e[0] % board.size, e[1]]), "technique": s.technique}
-			grid_view.teach_cells = s.cells
-			grid_view.teach_elims = s.eliminations
-			teach_label.text = s.explanation
-			print("[SD][timing] step size=%d ms=%.2f" % [board.size, ms])
-		print("[SD] teach ", s.technique, " cells=", s.cells, " value=", s.value, " ms=", ms)
+		board.add_taught(s)
+		_show_step(s)
+		print("[SD] teach ", s.technique, " cells=", s.cells, " value=", s.value)
 	else:
 		var i = grid_view.selected
 		if board.reveal(i) and not level.is_empty():
@@ -608,6 +626,23 @@ func _pay_hint(kind: String, how: String) -> void:
 			save(); _complete(); return
 	save()
 	grid_view.queue_redraw()
+
+## Free: re-show the most recent taught step the player hasn't acted on yet.
+func _reshow_hint() -> void:
+	var prev = board.active_hint()
+	_close_overlay()
+	if prev.is_empty(): return
+	_show_step(prev)
+	grid_view.queue_redraw()
+
+func _show_step(s: Dictionary, prefix: String = "") -> void:
+	if Logic.is_placement(s):
+		last_teach = {"cell": [s.cells[0] / board.size, s.cells[0] % board.size], "value": s.value, "technique": s.technique}
+	else:
+		last_teach = {"eliminations": s.eliminations.map(func(e): return [e[0] / board.size, e[0] % board.size, e[1]]), "technique": s.technique}
+	grid_view.teach_cells = s.cells
+	grid_view.teach_elims = s.eliminations
+	teach_label.text = prefix + str(s.get("explanation", ""))
 
 func _open_second_chance() -> void:
 	var v = _open_overlay()

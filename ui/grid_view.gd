@@ -14,6 +14,7 @@ var flash_cell: int = -1
 var flash_t: float = 0.0
 var feedback_count: int = 0   # wrong-entry feedback events (tests/QA)
 const FLASH_S = 0.45
+const EDGE_INSET = 3.0
 
 ## Wrong entry: red flash on the cell + short horizontal shake of the grid.
 func wrong_feedback(i: int) -> void:
@@ -54,7 +55,8 @@ func _ready() -> void:
 
 func cell_px() -> float:
 	if board == null: return 0.0
-	return floor(minf(size.x, size.y) / board.size)
+	# Inset by the thick border width so the outer 3 px lines are drawn fully inside the control.
+	return floor((minf(size.x, size.y) - 2.0 * EDGE_INSET) / board.size)
 
 func origin() -> Vector2:
 	var s = cell_px() * board.size

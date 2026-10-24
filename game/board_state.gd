@@ -17,6 +17,7 @@ var used_continue: bool = false
 var any_mistake: bool = false
 var reveals: int = 0
 var failed: bool = false    # second mistake limit after Continue -> only Retry
+var taught: Array = []      # Teach steps already given on this attempt: {technique, cells, value, eliminations, explanation}
 
 func setup(p_size: int, p_givens: Array, p_solution: Array) -> void:
 	size = p_size
@@ -38,6 +39,7 @@ func retry() -> void:
 	any_mistake = false
 	reveals = 0
 	failed = false
+	taught = []
 
 func is_given(i: int) -> bool:
 	return givens[i] != 0
@@ -107,6 +109,25 @@ func wrong_cells() -> Array:
 		if cells[i] != 0 and cells[i] != solution[i]: out.append(i)
 	return out
 
+## Record a taught step (only the fields the hint engine / re-show need).
+func add_taught(s: Dictionary) -> void:
+	var el = []
+	for e in s.get("eliminations", []): el.append([int(e[0]), int(e[1])])
+	taught.append({"technique": str(s.technique), "cells": _ints(s.cells), "value": int(s.get("value", 0)),
+		"eliminations": el, "explanation": str(s.get("explanation", ""))})
+
+## The most recent taught step the player hasn't acted on yet ({} if none): a placement whose cell
+## doesn't hold the taught digit, or an elimination step with an affected cell still unsolved.
+func active_hint() -> Dictionary:
+	for k in range(taught.size() - 1, -1, -1):
+		var t: Dictionary = taught[k]
+		if t.technique == "naked_single" or t.technique == "hidden_single":
+			if cells[t.cells[0]] != t.value: return t
+		else:
+			for e in t.eliminations:
+				if cells[e[0]] != solution[e[0]]: return t
+	return {}
+
 ## Board for Teach: givens + correct player digits.
 func correct_board() -> Array:
 	var b = cells.duplicate()
@@ -131,7 +152,7 @@ func apply_continue() -> void:
 func to_dict() -> Dictionary:
 	return {"size": size, "givens": givens, "solution": solution, "cells": cells, "notes": notes,
 		"history": history, "mistakes": mistakes, "second_chance_used": second_chance_used,
-		"used_continue": used_continue, "any_mistake": any_mistake, "reveals": reveals, "failed": failed}
+		"used_continue": used_continue, "any_mistake": any_mistake, "reveals": reveals, "failed": failed, "taught": taught}
 
 func from_dict(d: Dictionary) -> void:
 	size = int(d.size)
@@ -143,6 +164,9 @@ func from_dict(d: Dictionary) -> void:
 	mistakes = int(d.mistakes); second_chance_used = bool(d.second_chance_used)
 	used_continue = bool(d.used_continue); any_mistake = bool(d.any_mistake)
 	reveals = int(d.reveals); failed = bool(d.failed)
+	taught = []
+	for t in d.get("taught", []):
+		if t is Dictionary and t.has("technique") and t.has("cells"): add_taught(t)
 
 static func _ints(a: Array) -> Array:
 	var o = []

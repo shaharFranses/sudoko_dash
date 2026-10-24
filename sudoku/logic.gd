@@ -48,13 +48,15 @@ static func _mk(tech: String, cells: Array, value: int, elims: Array, ui: int, t
 ## Returns the easiest available step with tier <= max_tier, {} if stuck,
 ## or {"technique":"contradiction"} if the board is broken.
 ## tg: optional target-cell set {cell: true}; when non-empty only steps touching it are returned.
-static func find_step(shape, g: Array, cand: Array, max_tier: int = 4, tg: Dictionary = {}) -> Dictionary:
+## skip: optional cell set {cell: true}; singles (placements) into these cells are not returned
+## (used by the hint engine for cells the player was already taught but hasn't filled yet).
+static func find_step(shape, g: Array, cand: Array, max_tier: int = 4, tg: Dictionary = {}, skip: Dictionary = {}) -> Dictionary:
 	var n: int = shape.size
 	# Tier 1: naked single
 	for i in shape.cells:
 		if g[i] == 0:
 			if cand[i] == 0: return {"technique": "contradiction", "cells": [i]}
-			if Shape.popcount(cand[i]) == 1:
+			if Shape.popcount(cand[i]) == 1 and not skip.has(i):
 				var d = Shape.first_digit(cand[i])
 				var _st = _mk("naked_single", [i], d, [], -1, "%d is the only digit that fits this cell." % d)
 				if _touches(_st, tg): return _st
@@ -78,7 +80,7 @@ static func find_step(shape, g: Array, cand: Array, max_tier: int = 4, tg: Dicti
 					cnt += 1
 					pos = c
 			if cnt == 0: return {"technique": "contradiction", "cells": u.duplicate()}
-			if cnt == 1:
+			if cnt == 1 and not skip.has(pos):
 				var _st = _mk("hidden_single", [pos], d, [], ui, "%d can only go here in this %s." % [d, unit_kind(shape, ui)])
 				if _touches(_st, tg): return _st
 	if max_tier < 3: return {}

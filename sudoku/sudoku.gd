@@ -145,6 +145,44 @@ static func step_for_targets(grid: Array, target_cells: Array) -> Dictionary:
 		s2["touches_target"] = Logic._touches(s2, tg) and not tg.is_empty()
 	return s2
 
+## Hint engine for paid Teach: the next step that is NEW relative to the hints already taught on this board.
+##   grid: givens + correct player digits (BoardState.correct_board()). solution: full solution.
+##   target_cells: objective targets (empty = whole board); steps touching them are preferred.
+##   taught: steps already taught on this board ({technique, cells, value, eliminations}).
+## Taught eliminations are applied to the candidates (the player has been shown them, so an elimination
+## step is never repeated), and taught placements the player hasn't filled yet are skipped (never
+## re-taught). Pending placements are NOT assumed placed, so every explanation holds on the player's
+## visible board. Returns {} when no new step exists (caller must not charge).
+##   placements_only: target preference counts only PLACEMENTS into targets (Digit Hunt: an elimination
+##     on a target cell would just reveal where the hunted digit goes without teaching it); when no target
+##     placement is available the easiest step anywhere is taught (it unlocks the targets).
+static func next_hint(grid: Array, solution: Array, target_cells: Array, taught: Array, placements_only: bool = false) -> Dictionary:
+	var shape = Shape.of(size_of(grid))
+	var cand = Logic.init_candidates(shape, grid)
+	var skip = {}
+	for t in taught:
+		if Logic.is_placement(t):
+			var c = int(t.cells[0])
+			if grid[c] == 0: skip[c] = true
+		else:
+			for e in t.get("eliminations", []):
+				var c = int(e[0])
+				var d = int(e[1])
+				# safety: never strip the true digit (eliminations come from sound steps, but saves are data)
+				if grid[c] == 0 and d != int(solution[c]): cand[c] &= ~(1 << (d - 1))
+	var tg = {}
+	for t in target_cells:
+		if grid[int(t)] == 0 and not skip.has(int(t)): tg[int(t)] = true
+	if not tg.is_empty():
+		var s = Logic.find_step(shape, grid, cand, 2 if placements_only else 4, tg, skip)
+		if not s.is_empty() and s.technique != "contradiction":
+			s["touches_target"] = true
+			return s
+	var s2 = Logic.find_step(shape, grid, cand, 4, {}, skip)
+	if s2.is_empty() or s2.technique == "contradiction": return {}
+	s2["touches_target"] = not tg.is_empty() and Logic._touches(s2, tg)
+	return s2
+
 ## Runs the human-technique solve (tiers 1-4, same step order as grade()) step by step and
 ## records when each target cell is filled.
 ##   givens: flat Array (0 = empty), length size*size. size: 4, 6 or 9.
