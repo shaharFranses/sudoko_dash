@@ -17,6 +17,7 @@ func before_each():
 	await wait_frames(2)
 
 func after_each():
+	_gut_ui(true)
 	Sfx.set_reason("user", false)
 	get_tree().root.size = old_size
 	await wait_frames(3)
@@ -263,3 +264,98 @@ func test_compact_tool_labels_fit():
 			var font = b.get_theme_font("font")
 			var tw = font.get_string_size("Notes: OFF" if nm == "NotesButton" else b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, b.get_theme_font_size("font_size")).x
 			assert_lt(tw + 8, b.size.x, "L%d %s label fits (%.0f in %.0f)" % [lv + 1, nm, tw, b.size.x])
+
+# ---------------- Harbour list: drag from a button scrolls, tap presses (QA run 8) ----------------
+func _push(ev: InputEvent) -> void:
+	get_viewport().push_input(ev, true)   # logical (local) coords; goes through _input then the GUI
+
+func _win(p: Vector2) -> Vector2:
+	return p
+
+func _harbour_button(sc: ScrollContainer) -> Button:
+	for b in sc.find_children("*", "Button", true, false):
+		if b.text == "Quick 6x6": return b
+	return null
+
+## GUT's own on-screen runner panel (a CanvasLayer) sits over the game and would catch pushed input.
+func _gut_ui(on: bool) -> void:
+	var gl = get_tree().root.find_child("GutLayer", true, false)
+	if gl and "visible" in gl: gl.visible = on
+
+func _harbour_ready(sz: Vector2i) -> ScrollContainer:
+	_gut_ui(false)
+	await _resize(sz)
+	main.profile.coins = 0   # keep the list long and stable
+	main.profile.current_grid = {}   # no "Resume grid" row pushing the list down
+	main.show_harbour()
+	await wait_frames(3)
+	var sc = main.root.find_child("HarbourScroll", true, false)
+	sc.drag_enabled = true   # headless has no touchscreen; on phones main enables it
+	sc.drag_threshold = 10.0 * main.units_per_css
+	return sc
+
+func test_harbour_drag_from_a_button_scrolls_and_does_not_press():
+	for sz in [Vector2i(360, 640), Vector2i(844, 390)]:
+		var sc = await _harbour_ready(sz)
+		var b = _harbour_button(sc)
+		assert_not_null(b)
+		var hits = [0]
+		b.pressed.connect(func(): hits[0] += 1)
+		var maxs = sc.get_v_scroll_bar().max_value - sc.get_v_scroll_bar().page
+		assert_gt(maxs, 20.0, "%s list is scrollable" % sz)
+		var p = b.get_global_rect().get_center()
+		var down = InputEventMouseButton.new(); down.button_index = MOUSE_BUTTON_LEFT; down.pressed = true; down.position = _win(p); down.global_position = down.position
+		_push(down)
+		await wait_frames(1)
+		for k in range(1, 11):   # 150 CSS px upward swipe in 10 steps
+			var mm = InputEventMouseMotion.new(); mm.button_mask = MOUSE_BUTTON_MASK_LEFT
+			mm.position = _win(p - Vector2(0, 15.0 * k * main.units_per_css)); mm.global_position = mm.position
+			mm.relative = Vector2(0, -15.0)
+			_push(mm)
+			await wait_frames(1)
+		var up = InputEventMouseButton.new(); up.button_index = MOUSE_BUTTON_LEFT; up.pressed = false
+		up.position = _win(p - Vector2(0, 150.0 * main.units_per_css)); up.global_position = up.position
+		_push(up)
+		await wait_frames(3)
+		assert_gt(sc.scroll_vertical, 20, "%s drag from a button scrolled (%d)" % [sz, sc.scroll_vertical])
+		assert_eq(hits[0], 0, "%s the button was not pressed" % sz)
+		assert_eq(main.screen_name, "harbour", "%s still on the Harbour" % sz)
+		assert_false(b.button_pressed or b.is_pressed(), "%s button not left pressed" % sz)
+
+func test_harbour_tap_still_presses():
+	for sz in [Vector2i(844, 390), Vector2i(360, 640)]:
+		var sc = await _harbour_ready(sz)
+		var b = _harbour_button(sc)
+		var hits = [0]
+		b.pressed.connect(func(): hits[0] += 1)
+		var p = b.get_global_rect().get_center()
+		var down = InputEventMouseButton.new(); down.button_index = MOUSE_BUTTON_LEFT; down.pressed = true; down.position = _win(p); down.global_position = down.position
+		_push(down)
+		await wait_frames(1)
+		var mm = InputEventMouseMotion.new(); mm.button_mask = MOUSE_BUTTON_MASK_LEFT   # finger jitter under the threshold
+		mm.position = _win(p + Vector2(0, 4.0 * main.units_per_css)); mm.global_position = mm.position
+		_push(mm)
+		var up = InputEventMouseButton.new(); up.button_index = MOUSE_BUTTON_LEFT; up.pressed = false; up.position = mm.position; up.global_position = up.position
+		_push(up)
+		await wait_frames(3)
+		assert_eq(hits[0], 1, "%s tap pressed the button once" % sz)
+		assert_eq(main.screen_name, "grid", "%s Quick 6x6 started" % sz)
+		main._leave_grid()
+		await wait_frames(2)
+
+func test_only_scroll_container_is_the_harbour_list():
+	# QA run 8 asked about other lists: settings / hint panel / level entries have no ScrollContainer
+	# (they fit on screen, see test_menus_fit_every_mobile_size); the Harbour list is the only one.
+	for scr in ["title", "settings", "harbour"]:
+		match scr:
+			"title": main._build_title()
+			"settings": main.show_settings("title")
+			"harbour": main.show_harbour()
+		await wait_frames(2)
+		var scs = main.root.find_children("*", "ScrollContainer", true, false)
+		assert_eq(scs.size(), 1 if scr == "harbour" else 0, scr)
+	main.start_level(10)
+	await wait_frames(2)
+	main._open_hint_panel()
+	await wait_frames(2)
+	assert_eq(main.root.find_children("*", "ScrollContainer", true, false).size(), 0, "grid + hint panel")

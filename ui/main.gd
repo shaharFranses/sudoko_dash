@@ -12,6 +12,7 @@ const Obj = preload("res://game/objectives.gd")
 const Levels = preload("res://game/levels.gd")
 const HarbourView = preload("res://ui/harbour_view.gd")
 const UiLayout = preload("res://game/ui_layout.gd")
+const TouchScroll = preload("res://ui/touch_scroll.gd")
 
 var profile = Profile.new()
 var source = Source.new()
@@ -273,9 +274,11 @@ func show_harbour() -> void:
 	hv.custom_minimum_size = Vector2(300, 220)
 	box.add_child(hv)
 	var av = avail_size()
-	var sc = ScrollContainer.new(); sc.custom_minimum_size = Vector2(460 if landscape else av.x, 0 if landscape else av.y * 0.55)
+	var sc = TouchScroll.new(); sc.custom_minimum_size = Vector2(460 if landscape else av.x, 0 if landscape else av.y * 0.55)
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.name = "HarbourScroll"
+	sc.drag_enabled = _touch   # desktop mouse behaviour unchanged
+	sc.drag_threshold = 10.0 * units_per_css
 	box.add_child(sc)
 	var v = VBoxContainer.new(); v.size_flags_horizontal = SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 8)
