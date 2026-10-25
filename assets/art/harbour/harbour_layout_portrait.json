@@ -1,0 +1,90 @@
+{
+  "_note": "Final task sprite placement used by ui/harbour_view.gd (LAYOUT). Coordinates in background pixels; foot = bottom-centre of the sprite, w = drawn width (same for unrestored and restored). v1 top-left/scale guesses replaced during integration (art/integrate-v1).",
+  "version": 2,
+  "portrait": {
+    "base_size": [
+      720,
+      1280
+    ],
+    "tasks": {
+      "lighthouse": {
+        "foot": [
+          592,
+          470
+        ],
+        "w": 66
+      },
+      "boats": {
+        "foot": [
+          560,
+          768
+        ],
+        "w": 220
+      },
+      "dock": {
+        "foot": [
+          332,
+          842
+        ],
+        "w": 150
+      },
+      "cafe": {
+        "foot": [
+          122,
+          805
+        ],
+        "w": 240
+      },
+      "flowers": {
+        "foot": [
+          236,
+          892
+        ],
+        "w": 170
+      }
+    }
+  },
+  "landscape": {
+    "base_size": [
+      1280,
+      720
+    ],
+    "tasks": {
+      "lighthouse": {
+        "foot": [
+          1036,
+          262
+        ],
+        "w": 66
+      },
+      "boats": {
+        "foot": [
+          770,
+          560
+        ],
+        "w": 230
+      },
+      "dock": {
+        "foot": [
+          452,
+          630
+        ],
+        "w": 140
+      },
+      "cafe": {
+        "foot": [
+          132,
+          610
+        ],
+        "w": 250
+      },
+      "flowers": {
+        "foot": [
+          340,
+          698
+        ],
+        "w": 170
+      }
+    }
+  }
+}
