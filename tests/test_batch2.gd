@@ -10,6 +10,7 @@ func before_each():
 	Ads.call_log.clear()
 	Ads.set_mode("mock_available")
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 
@@ -46,6 +47,7 @@ func test_b2_classic_tier_persists_across_reload():
 		if btn.text == "T3": btn.pressed.emit(); break
 	assert_eq(main.classic_tier, 3)
 	var m2 = load("res://scenes/main.tscn").instantiate()
+	m2.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(m2)
 	await wait_frames(2)
 	assert_eq(m2.classic_tier, 3)

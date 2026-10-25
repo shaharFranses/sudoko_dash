@@ -1,4 +1,4 @@
-## Master-mute arbitration (pure logic). Muted while ANY reason is active: "ad", "hidden", "user".
+## Master-mute arbitration (pure logic). Muted while ANY reason is active: "ad", "hidden", "blur", "user", "intro".
 extends RefCounted
 
 var reasons: Dictionary = {}

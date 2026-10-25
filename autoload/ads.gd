@@ -17,6 +17,11 @@ var context: String = "menu"    # menu | grid | grid_panel | results
 var call_log: Array = []
 var busy: bool = false
 var mock = null
+## Boot hold (PKD studio intro): while held, no SDK call reaches the page (gameplayStart/Stop, requestAd,
+## loadingStop via Store) and no ad can run. main.gd holds it from boot until the intro's `finished`.
+var held: bool = false
+## Every SDK call that would reach the page, in order (tests + QA): {t_ms, call}. Recorded off-web too.
+var sdk_log: Array = []
 
 func _ready() -> void:
 	if OS.has_feature("web") and _js_bool("window.SD_CG && window.SD_CG.portal()"):
@@ -30,8 +35,25 @@ func grid_open() -> bool:
 
 func set_context(c: String) -> void:
 	context = c
+	if not held: _push_gameplay()
+
+func _push_gameplay() -> void:
 	if mode == "sdk":
-		JavaScriptBridge.eval("window.SD_CG.gameplay(%s)" % ("true" if c == "grid" else "false"))
+		var on = context == "grid"
+		sdk(("gameplayStart" if on else "gameplayStop"), "window.SD_CG.gameplay(%s)" % ("true" if on else "false"))
+
+## Hold / release SDK traffic and ads (boot intro). Releasing re-announces the current gameplay state once.
+func hold(on: bool) -> void:
+	if held == on: return
+	held = on
+	if not on: _push_gameplay()
+
+## The single gate for page SDK calls. Never reaches the page while held.
+func sdk(what: String, js: String):
+	if held: return null
+	sdk_log.append({"t_ms": Time.get_ticks_msec(), "call": what})
+	if OS.has_feature("web"): return JavaScriptBridge.eval(js)
+	return null
 
 func modes() -> Array:
 	return (["none", "sdk"] + (mock.MODES if mock else []))
@@ -43,6 +65,7 @@ func set_mode(m: String) -> void:
 		changed.emit()
 
 func available() -> bool:
+	if held: return false
 	if mode == "sdk": return _js_bool("window.SD_CG && window.SD_CG.available()")
 	if mock and mock.handles(mode): return mock.available(mode)
 	return false
@@ -74,6 +97,9 @@ func midgame(origin: String) -> bool:
 	return await _request("midgame", origin)
 
 func _request(kind: String, origin: String) -> bool:
+	if held:
+		_log(kind, origin, "blocked_intro")
+		return false
 	if busy or not available():
 		_log(kind, origin, "unavailable")
 		return false
@@ -84,7 +110,7 @@ func _request(kind: String, origin: String) -> bool:
 	var timed_out = false
 	var t0 = Time.get_ticks_msec()
 	if mode == "sdk":
-		var id = int(JavaScriptBridge.eval("window.SD_CG.request('%s')" % kind))
+		var id = int(sdk("requestAd(%s)" % kind, "window.SD_CG.request('%s')" % kind))
 		var st = "pending"
 		while st == "pending" and Time.get_ticks_msec() - t0 < timeout_s * 1000:
 			await get_tree().create_timer(0.1).timeout

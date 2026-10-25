@@ -13,6 +13,7 @@ func before_each():
 	Ads.set_mode("mock_available")
 	old_size = get_tree().root.size
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 

@@ -3,6 +3,7 @@
 - `game/` pure rules: board_state (notes/undo/mistakes), profile (economy, stars, tasks, 24h cap), ad_policy, puzzle_source
 - `autoload/` Ads adapter (CrazyGames SDK v3 + mock), Store (CG data / localStorage / user://), Dbg (QA hooks H1-H6, debug builds only)
 - `ui/` main flow, grid view, harbour view; `web/head_include.html` SDK glue
+- `pkd_intro/` PKD studio intro (drop-in from /workspace/pikeydi-logo/godot, INTEGRATION.md overlay mode): plays over the title at boot; sound, ads and every SDK call (loadingStop, gameplayStart/Stop, requestAd) wait for its `finished`; tap/click/key skips. Navy `#1E1B3A` boot splash + loader (`pkd_boot_splash.png`)
 - `data/packs/` offline packs (9x9_t1..t4 x300; 4x4_t1 x200, 6x6_t1/t2 x100 fallback); `data/test_vectors.json` (70 vectors for the C# port)
 
 Tests: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gexit` (also grep output for `SCRIPT ERROR`; GUT counts those as risky, not failures)

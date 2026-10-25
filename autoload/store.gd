@@ -11,9 +11,9 @@ func wait_ready() -> void:
 		if str(JavaScriptBridge.eval("(!window.SD_CG || window.SD_CG.ready()) ? 'y' : 'n'")) == "y": return
 		await get_tree().create_timer(0.05).timeout
 
+## CrazyGames loadingStop, through the Ads SDK gate (logged in Ads.sdk_log; never while the boot intro holds it).
 func loading_stop() -> void:
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.SD_CG && window.SD_CG.loadingStop()")
+	Ads.sdk("loadingStop", "window.SD_CG && window.SD_CG.loadingStop()")
 
 func save(d: Dictionary) -> void:
 	var text = JSON.stringify(d)

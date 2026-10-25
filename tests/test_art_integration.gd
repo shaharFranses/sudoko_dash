@@ -8,6 +8,7 @@ func before_each():
 	Store.clear()
 	Ads.set_mode("mock_available")
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 

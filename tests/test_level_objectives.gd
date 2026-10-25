@@ -13,6 +13,7 @@ func before_each():
 	Ads.set_mode("mock_available")
 	Sfx.set_reason("hidden", false); Sfx.set_reason("blur", false)
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 
@@ -176,6 +177,7 @@ func test_save_and_resume_restores_level_and_elapsed():
 	var d = Store.load_data()
 	assert_eq(int(d.current_grid.level.elapsed_ms), 123456)
 	var m2 = load("res://scenes/main.tscn").instantiate()
+	m2.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(m2)
 	await wait_frames(2)
 	m2.resume_grid()

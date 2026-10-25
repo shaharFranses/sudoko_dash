@@ -1,6 +1,6 @@
 ## Audio plumbing + tiny generated placeholder SFX (no audio files). Autoload "Sfx".
 ## Master bus is muted while an ad plays (Ads hooks), while the tab is hidden (visibilitychange),
-## or when the user mutes. Web AudioContext is resumed on the first tap/key (glue in web/head_include.html).
+## while the PKD boot intro plays ("intro", set by main.gd), or when the user mutes. Web AudioContext is resumed on the first tap/key (glue in web/head_include.html).
 extends Node
 
 const MuteState = preload("res://game/mute_state.gd")
@@ -53,6 +53,12 @@ static func _make(notes: Array) -> AudioStreamWAV:
 func set_reason(reason: String, active: bool) -> void:
 	var m = state.set_reason(reason, active)
 	AudioServer.set_bus_mute(0, m)
+
+## Players currently producing sound (tests: nothing plays during the boot intro).
+func playing_count() -> int:
+	var n = 0
+	for p in _players: if p.playing: n += 1
+	return n
 
 func is_muted() -> bool:
 	return AudioServer.is_bus_mute(0)

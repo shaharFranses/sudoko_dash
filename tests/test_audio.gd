@@ -65,6 +65,7 @@ func test_sfx_generated_and_tiny():
 func test_gameplay_sounds_wired():
 	Store.clear()
 	var main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 	main.profile.path_next = 5

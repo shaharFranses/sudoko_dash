@@ -19,6 +19,19 @@ const FONT_TITLE = preload("res://assets/art/fonts/Fraunces-BoldSoft.ttf")
 const FONT_HEADER = preload("res://assets/art/fonts/Fraunces-SemiBoldSoft.ttf")
 const BG_PORTRAIT = preload("res://assets/art/harbour/harbour_bg_portrait.webp")
 const BG_LANDSCAPE = preload("res://assets/art/harbour/harbour_bg_landscape.webp")
+const PkdIntro = preload("res://pkd_intro/pkd_intro.tscn")   # studio intro (overlay mode, INTEGRATION.md 2A)
+
+signal intro_done
+
+## PKD studio intro: plays over the first screen at boot. Sound, ads and every CrazyGames SDK call
+## (loadingStop, gameplayStart/Stop, requestAd) are held until its `finished`. Tests that don't exercise
+## the intro set play_intro = false before adding the scene.
+var play_intro: bool = true
+var intro = null                   # the PkdIntro CanvasLayer while it plays
+var intro_finished: bool = false
+var intro_finished_ms: int = -1
+var _title_built: bool = false
+var _loading_stopped: bool = false
 
 var profile = Profile.new()
 var source = Source.new()
@@ -65,6 +78,14 @@ var _just_restored: String = ""    # task bought this visit: the Harbour fades i
 
 func _ready() -> void:
 	Dbg.main = self
+	if play_intro:
+		Ads.hold(true)
+		Sfx.set_reason("intro", true)
+		intro = PkdIntro.instantiate()
+		intro.finished.connect(_on_intro_finished)
+		add_child(intro)   # CanvasLayer 128 over everything; the title builds underneath (hides load time)
+	else:
+		intro_finished = true
 	policy = AdPolicy.new(Time.get_ticks_msec())
 	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
@@ -270,7 +291,30 @@ func _coin_option(parent: Control, text: String, price: int, cb: Callable) -> vo
 func show_title() -> void:
 	_build_title()
 	print("[SD] title ready")
+	_title_built = true
+	_maybe_loading_stop()
+
+## CrazyGames loadingStop once: when the intro has finished AND the first screen is ready.
+func _maybe_loading_stop() -> void:
+	if _loading_stopped or not intro_finished or not _title_built: return
+	_loading_stopped = true
 	Store.loading_stop()
+
+func _on_intro_finished() -> void:
+	intro_finished = true
+	intro_finished_ms = Time.get_ticks_msec()
+	intro = null   # frees itself (auto_free)
+	Sfx.set_reason("intro", false)
+	Ads.hold(false)   # re-announces the current gameplay state (title -> gameplayStop)
+	print("[SD] intro finished")
+	_maybe_loading_stop()
+	intro_done.emit()
+
+## Release the boot holds if this scene goes away mid-intro (tests, scene reloads).
+func _exit_tree() -> void:
+	if not intro_finished:
+		Sfx.set_reason("intro", false)
+		Ads.hold(false)
 
 func _build_title() -> void:
 	screen_name = "title"

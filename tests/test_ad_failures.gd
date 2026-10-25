@@ -10,6 +10,7 @@ func before_each():
 	Ads.timeout_s = 0.3
 	Dbg.clock_offset_ms = 0
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 

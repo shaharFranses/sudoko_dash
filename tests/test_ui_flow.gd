@@ -10,6 +10,7 @@ func before_each():
 	Ads.set_mode("mock_available")
 	Dbg.clock_offset_ms = 0
 	main = load("res://scenes/main.tscn").instantiate()
+	main.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(main)
 	await wait_frames(2)
 
@@ -239,6 +240,7 @@ func test_reload_restores_everything():
 	var snap_p = JSON.stringify(main.profile.to_dict())
 	var snap_b = JSON.stringify(b.to_dict())
 	var m2 = load("res://scenes/main.tscn").instantiate()
+	m2.play_intro = false   # PKD intro covered by test_pkd_intro.gd
 	add_child_autofree(m2)
 	await wait_frames(1)
 	assert_eq(JSON.stringify(m2.profile.to_dict()), snap_p)
