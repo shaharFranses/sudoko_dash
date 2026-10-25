@@ -83,6 +83,7 @@ func _ready() -> void:
 		Sfx.set_reason("intro", true)
 		intro = PkdIntro.instantiate()
 		intro.finished.connect(_on_intro_finished)
+		intro.started.connect(func(): print("[SD] intro started"))   # v1.1: first visible frame (clock starts)
 		add_child(intro)   # CanvasLayer 128 over everything; the title builds underneath (hides load time)
 	else:
 		intro_finished = true

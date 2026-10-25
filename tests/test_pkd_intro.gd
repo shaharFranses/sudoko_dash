@@ -3,6 +3,7 @@ extends GutTest
 ## skips it; no sound, no ads and no CrazyGames SDK call (loadingStop, gameplayStart/Stop, requestAd) before `finished`.
 
 var main
+var times = {}   # wall-clock ms of the intro's started / finished signals
 
 func before_each():
 	Store.clear()
@@ -18,8 +19,11 @@ func after_each():
 	Ads.sdk_log.clear()
 
 func _boot() -> void:
+	times = {}
 	main = load("res://scenes/main.tscn").instantiate()   # play_intro defaults to true
 	add_child_autofree(main)
+	main.intro.started.connect(func(): times["started"] = Time.get_ticks_msec())
+	main.intro.finished.connect(func(): times["finished"] = Time.get_ticks_msec())
 	await wait_frames(2)
 
 func _calls() -> Array:
@@ -41,8 +45,22 @@ func test_intro_plays_first_then_title():
 	assert_almost_eq(dur, 1.93, 0.05, "1.93 s intro")
 	await wait_for_signal(main.intro_done, 6.0)
 	assert_true(main.intro_finished, "intro finished on its own")
-	await wait_frames(2)
-	assert_false(is_instance_valid(intro), "intro node freed after finished")
+	# v1.1 keeps the node for one more draw (final frame on screen) and frees it on the next
+	# RenderingServer.frame_post_draw. The headless dummy renderer never emits frame_post_draw (checked:
+	# 0 in 30 frames), so the free can only be asserted with a real renderer (web smoke test covers it).
+	var draws = [0]
+	var cb = func(): draws[0] += 1
+	RenderingServer.frame_post_draw.connect(cb)
+	for k in 20:
+		if not is_instance_valid(intro): break
+		await wait_frames(1)
+	RenderingServer.frame_post_draw.disconnect(cb)
+	assert_true(intro == null or not is_instance_valid(intro) or intro._done, "intro done")
+	assert_null(main.intro, "main dropped its intro reference")
+	if draws[0] > 0:
+		assert_false(is_instance_valid(intro), "intro node freed one draw after finished")
+	else:
+		gut.p("headless: no frame_post_draw, intro free not observable here (verified in the web smoke test)")
 	assert_eq(main.screen_name, "title", "title follows the intro")
 	var play = main.find_child("PlayButton", true, false)
 	assert_not_null(play)
@@ -132,12 +150,61 @@ func test_integration_files_and_settings():
 	assert_eq(fr.frames.size(), 58)
 	var navy = Color(0.117647, 0.105882, 0.227451, 1)
 	assert_true(ProjectSettings.get_setting("application/boot_splash/bg_color").is_equal_approx(navy))
-	assert_eq(ProjectSettings.get_setting("application/boot_splash/image"), "res://pkd_boot_splash.png")
+	assert_eq(ProjectSettings.get_setting("application/boot_splash/image"), "res://pkd_boot_splash_plain.png", "v1.1: plain navy boot splash")
+	var splash = load("res://pkd_boot_splash_plain.png").get_image()
+	assert_not_null(splash)
+	if splash: assert_true(splash.get_pixel(0, 0).is_equal_approx(navy) or splash.get_pixel(0, 0).to_html(false) == "1e1b3a", "plain splash is navy")
 	assert_true(ProjectSettings.get_setting("application/boot_splash/fullsize"))
 	assert_true(ProjectSettings.get_setting("rendering/environment/defaults/default_clear_color").is_equal_approx(navy))
 	var head = FileAccess.get_file_as_string("res://web/head_include.html")
 	assert_string_contains(head, "background-color: #1E1B3A !important")
+	assert_string_contains(head, "#status-splash { visibility: hidden !important; }", "v1.1: no logo on the HTML loader")
+	assert_false(head.contains("object-fit: contain"), "v1.0 logo-splash CSS removed")
 	assert_false(head.to_lower().contains("#bfe3ef"), "old sky loader colour gone")
 	var presets = FileAccess.get_file_as_string("res://export_presets.cfg")
 	assert_false(presets.to_lower().contains("#bfe3ef"), "both presets carry the navy head_include")
 	assert_eq(presets.count("background-color: #1E1B3A !important"), 2)
+	assert_eq(presets.count("#status-splash { visibility: hidden !important; }"), 2)
+
+# ---- v1.1: wall-clock playback, `started`, hard cap ----
+
+func test_v11_started_then_finished_on_wall_clock():
+	await _boot()
+	await wait_for_signal(main.intro_done, 6.0)
+	assert_true(times.has("started"), "started fired")
+	assert_true(times.has("finished"), "finished fired")
+	if times.has("started") and times.has("finished"):
+		var len_s = (times.finished - times.started) / 1000.0
+		gut.p("headless visible -> finished: %.2f s" % len_s)
+		assert_between(len_s, 1.85, 2.6, "about 1.93 s of wall clock from the first visible frame, never past the cap (+1 frame)")
+	assert_eq(_calls().count("loadingStop"), 1)
+	for e in Ads.sdk_log:
+		assert_true(e.t_ms >= times.finished, "SDK call %s only after finished" % e.call)
+
+func test_v11_hard_cap_shows_final_frame_and_finishes():
+	await _boot()
+	var intro = main.intro
+	assert_eq(intro.MAX_SECONDS, 2.5)
+	if not times.has("started"): await wait_for_signal(intro.started, 2.0)
+	assert_false(main.intro_finished)
+	# Simulate a stall: the clock says 3 s have passed since the first visible frame (past the 2.5 s cap).
+	intro._start_ms = Time.get_ticks_msec() - 3000
+	await wait_frames(1)
+	assert_true(main.intro_finished, "finished on the first frame past the cap")
+	assert_eq(intro._shown, intro.FRAMES.frames.size() - 1, "final PKD frame on screen when it ends")
+	assert_false(Ads.held)
+	assert_false(Sfx.state.reasons.has("intro"))
+
+func test_v11_slow_device_skips_frames_and_stays_bounded():
+	await _boot()
+	var stall = func():   # ~350 ms of main-thread work every frame (about 3 fps)
+		var t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 350: pass
+	main.get_tree().process_frame.connect(stall)
+	await wait_for_signal(main.intro_done, 8.0)
+	main.get_tree().process_frame.disconnect(stall)
+	assert_true(main.intro_finished)
+	if times.has("started") and times.has("finished"):
+		var len_s = (times.finished - times.started) / 1000.0
+		gut.p("headless 3 fps visible -> finished: %.2f s" % len_s)
+		assert_lt(len_s, 2.5 + 0.8, "wall clock: a slow device doesn't stretch the intro (v1.0 counted each long frame as 1/30 s)")

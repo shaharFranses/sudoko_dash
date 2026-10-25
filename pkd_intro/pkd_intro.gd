@@ -1,11 +1,18 @@
 ## Pikeydi studio intro ("Pikeydi" -> PKD, v5b zit-pop stains). Godot 4.3, web-safe:
-## no threads, no video codecs. Frames are WebP bytes decoded one at a time into a
-## single ImageTexture, so GPU memory stays at one 720x720 texture.
+## no threads, no video codecs. Frames are WebP bytes; only the frame due *now* is decoded
+## into a single ImageTexture, so GPU memory stays at one 720x720 texture.
+##
+## v1.1: playback is strictly wall-clock driven (Time.get_ticks_msec), frames are skipped
+## when the device is slow, the clock starts on the first frame actually drawn, and a hard
+## cap (MAX_SECONDS = 2.5) always ends it: final frame shown, `finished` emitted, node freed.
 ##
 ## Use as an overlay: add pkd_intro.tscn as a child of your first scene and wait for `finished`.
 ## Or as a boot wrapper: instance it in a tiny boot scene and set `next_scene`.
 extends CanvasLayer
 
+## Emitted once, on the first frame the intro is actually on screen (the clock starts here).
+signal started
+## Emitted once when the intro ends (natural end, hard cap, skip or missing data).
 signal finished
 
 ## Optional: scene to switch to when the intro ends (boot-wrapper mode).
@@ -16,19 +23,26 @@ signal finished
 @export var auto_free: bool = true
 
 const FRAMES: Resource = preload("pkd_frames.res")
+## Hard cap, seconds after the intro first became visible.
+const MAX_SECONDS := 2.5
+## If the first draw is never reported, start the clock anyway after this long (ms after _ready).
+const START_FALLBACK_MS := 1000
 
 var _bg: ColorRect
 var _rect: TextureRect
 var _tex: ImageTexture
 var _img := Image.new()
-var _t := 0.0
-var _shown := -1
+var _n := 0
+var _ready_ms := 0
+var _start_ms := -1      # wall clock of the first visible frame; -1 until then
+var _shown := -1         # index of the frame currently in the texture
 var _done := false
 
 
 func _ready() -> void:
 	layer = 128
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ready_ms = Time.get_ticks_msec()
 	_bg = ColorRect.new()
 	_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_bg.color = Color8(0x1E, 0x1B, 0x3A)
@@ -44,24 +58,57 @@ func _ready() -> void:
 		push_warning("pkd_intro: frame data missing, skipping intro")
 		_finish.call_deferred()
 		return
+	_n = FRAMES.frames.size()
 	# Match the letterbox to the decoded frame background exactly (lossy WebP shifts it by ~1/255).
 	_bg.color = _img.get_pixel(2, 2)
 	_tex = ImageTexture.create_from_image(_img)
 	_rect.texture = _tex
 	_shown = 0
+	# Start the clock on the first frame that is actually drawn with the intro in it,
+	# not at scene load (a slow first frame must not eat into the animation).
+	RenderingServer.frame_post_draw.connect(_on_first_draw, CONNECT_ONE_SHOT)
 
 
-func _process(delta: float) -> void:
+func _on_first_draw() -> void:
+	if _start_ms < 0 and not _done:
+		_start_ms = Time.get_ticks_msec()
+		started.emit()
+
+
+## Seconds since the intro became visible (0 before that).
+func get_elapsed() -> float:
+	return 0.0 if _start_ms < 0 else (Time.get_ticks_msec() - _start_ms) / 1000.0
+
+
+## Natural length in seconds (58 frames / 30 fps = 1.93 s).
+func get_duration() -> float:
+	return _n / FRAMES.fps if _n > 0 else 0.0
+
+
+func _process(_delta: float) -> void:
 	if _done:
 		return
-	# A single long hitch (e.g. the first frame after loading) counts as one frame,
-	# so it doesn't skip half the animation; normal low frame rates stay real-time.
-	_t += delta if delta < 0.25 else 1.0 / FRAMES.fps
-	var i := int(_t * FRAMES.fps)
-	if i >= FRAMES.frames.size():
+	var now := Time.get_ticks_msec()
+	if _start_ms < 0:
+		if now - _ready_ms < START_FALLBACK_MS:
+			return
+		_start_ms = now   # first draw never reported: start anyway so the cap still applies
+		started.emit()
+	var t := (now - _start_ms) / 1000.0
+	# Pick the frame due now from the wall clock; skip any we are late for.
+	var i := mini(int(t * FRAMES.fps), _n - 1)
+	_show(i)
+	# Natural end, or the hard cap whatever the frame rate. _finish() keeps the node for one
+	# more draw, so the final frame set here is what is on screen when it goes.
+	if t >= get_duration() or t >= MAX_SECONDS:
+		_show(_n - 1)
 		_finish()
+
+
+func _show(i: int) -> void:
+	if i == _shown:
 		return
-	if i != _shown and _img.load_webp_from_buffer(FRAMES.frames[i]) == OK:
+	if _img.load_webp_from_buffer(FRAMES.frames[i]) == OK:
 		_tex.update(_img)
 		_shown = i
 
@@ -77,11 +124,6 @@ func _input(event: InputEvent) -> void:
 		_finish()
 
 
-## Total length in seconds (about 1.93 s).
-func get_duration() -> float:
-	return FRAMES.frames.size() / FRAMES.fps
-
-
 func skip() -> void:
 	_finish()
 
@@ -91,8 +133,12 @@ func _finish() -> void:
 		return
 	_done = true
 	set_process(false)
+	if RenderingServer.frame_post_draw.is_connected(_on_first_draw):
+		RenderingServer.frame_post_draw.disconnect(_on_first_draw)
 	finished.emit()
 	if next_scene != "":
 		get_tree().change_scene_to_file.call_deferred(next_scene)
 	elif auto_free:
+		# keep the last frame (final PKD on the cap / natural end) on screen for one draw, then go
+		await RenderingServer.frame_post_draw
 		queue_free()
