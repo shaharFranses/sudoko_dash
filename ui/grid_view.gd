@@ -36,17 +36,23 @@ func _shake() -> Vector2:
 	var k = flash_t / FLASH_S
 	return Vector2(cos((1.0 - k) * 40.0) * 6.0 * k, 0)
 
-const C_BG = Color("fffdf7")
-const C_LINE = Color("8aa2b0")
-const C_THICK = Color("2d4a5a")
-const C_GIVEN = Color("1f2f3a")
-const C_ENTRY = Color("2a6fdb")
-const C_WRONG = Color("d23c3c")
-const C_HL = Color("e3f0f7")
-const C_SAME = Color("bcdcf0")
-const C_SEL = Color("8fc6ea")
-const C_TEACH = Color("ffe38a")
-const C_FLAG = Color("ffc2c2")
+# Art kit v1 palette (assets/art/art_palette.gd); see docs/art/STYLE_GUIDE.md for the contrast table.
+const AP = preload("res://assets/art/art_palette.gd")
+const C_BG = AP.GRID_CELL
+const C_LINE = AP.GRID_LINE_THIN
+const C_THICK = AP.GRID_LINE_BOX
+const C_GIVEN = AP.DIGIT_GIVEN
+const C_ENTRY = AP.DIGIT_PLAYER
+const C_WRONG = AP.ERROR_INK
+const C_HL = AP.HL_PEER
+const C_SAME = AP.HL_SAME
+const C_SEL = AP.HL_SELECTED
+const C_TEACH = Color("D9EBCB")   # soft sage: teach step (distinct from the butter selection)
+const C_FLAG = AP.ERROR_CELL
+const C_NOTES = AP.DIGIT_NOTES
+const FONT_GIVEN = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Bold.ttf")
+const FONT_ENTRY = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Medium.ttf")
+const FONT_NOTES = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Regular.ttf")
 
 func _ready() -> void:
 	set_process(false)
@@ -81,7 +87,9 @@ func _draw() -> void:
 	var n: int = board.size
 	var cp = cell_px()
 	var o = origin() + _shake()
-	var font = get_theme_default_font()
+	var font = FONT_NOTES
+	# paper card: soft lilac shadow under the grid (never pure black)
+	draw_rect(Rect2(o + Vector2(0, 4), Vector2(cp * n, cp * n)).grow(2), Color(AP.SHADOW_LILAC, 0.18))
 	draw_rect(Rect2(o, Vector2(cp * n, cp * n)), C_BG)
 	var sel_d = board.cells[selected] if selected >= 0 else 0
 	for i in n * n:
@@ -98,13 +106,20 @@ func _draw() -> void:
 		if col.a > 0: draw_rect(r, col)
 		var d: int = board.cells[i]
 		if d != 0:
-			var fs = int(cp * 0.66)
-			var c = C_GIVEN if board.is_given(i) else (C_WRONG if d != board.solution[i] else C_ENTRY)
+			var fs = int(cp * 0.68)
+			var given = board.is_given(i)
+			var wrong = not given and d != board.solution[i]
+			var c = C_GIVEN if given else (C_WRONG if wrong else C_ENTRY)
+			var df: Font = FONT_GIVEN if given else FONT_ENTRY
 			var txt = str(d)
-			var ts = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
-			var asc = font.get_ascent(fs)
-			var desc = font.get_descent(fs)
-			draw_string(font, r.position + Vector2((cp - ts.x) / 2.0, (cp - (asc + desc)) / 2.0 + asc), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c)
+			var ts = df.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			var asc = df.get_ascent(fs)
+			var desc = df.get_descent(fs)
+			var base = r.position + Vector2((cp - ts.x) / 2.0, (cp - (asc + desc)) / 2.0 + asc)
+			draw_string(df, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c)
+			if wrong:   # never colour-only: a wrong digit is also underlined
+				var uy = base.y + maxf(3.0, cp * 0.06)
+				draw_line(Vector2(base.x - cp * 0.04, uy), Vector2(base.x + ts.x + cp * 0.04, uy), C_WRONG, maxf(2.0, cp * 0.05))
 		elif board.notes[i] != 0:
 			var bw: int = board.shape.box_w
 			var bh: int = board.shape.box_h
@@ -120,7 +135,7 @@ func _draw() -> void:
 					var cell_h = cp / rows
 					var t = str(dd)
 					var ts2 = font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2)
-					var nc = Color("4a5d6b")
+					var nc = C_NOTES
 					for el in teach_elims:
 						if el[0] == i and el[1] == dd: nc = C_WRONG
 					draw_string(font, r.position + Vector2((k % cols) * cell_w + (cell_w - ts2.x) / 2.0, (k / cols) * cell_h + (cell_h + font.get_ascent(fs2) - font.get_descent(fs2)) / 2.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, nc)
@@ -130,15 +145,17 @@ func _draw() -> void:
 		var ctr = o + Vector2(c % n + 0.5, c / n + 0.5) * cp
 		if k > 0:
 			var p0 = lantern_path[k - 1]
-			draw_line(o + Vector2(p0 % n + 0.5, p0 / n + 0.5) * cp, ctr, Color(0.85, 0.6, 0.1, 0.5), 3.0)
+			draw_line(o + Vector2(p0 % n + 0.5, p0 / n + 0.5) * cp, ctr, Color(AP.STAR_GOLD, 0.55), 3.0)
 		var lit = board.cells[c] == board.solution[c]
-		draw_circle(ctr + Vector2(cp * 0.36, -cp * 0.36), cp * 0.09, Color("ffc23a") if lit else Color("8a8f96"))
+		var lc = ctr + Vector2(cp * 0.36, -cp * 0.36)
+		draw_circle(lc, cp * 0.09 + 1.5, AP.TEXT_INK if lit else AP.GRID_LINE_THIN)
+		draw_circle(lc, cp * 0.09, AP.STAR_GOLD if lit else AP.HL_PEER)
 	for c in target_cells:
 		if c in lantern_path: continue
 		var rr = Rect2(o + Vector2(c % n, c / n) * cp, Vector2(cp, cp)).grow(-3)
-		draw_rect(rr, Color("e08a1e") if board.cells[c] != board.solution[c] else Color("6bb36b"), false, 2.0)
+		draw_rect(rr, AP.ACCENT_TERRACOTTA if board.cells[c] != board.solution[c] else Color("4F7D45"), false, 2.5)
 	for k in range(n + 1):
 		var thick_v = k % board.shape.box_w == 0
 		var thick_h = k % board.shape.box_h == 0
-		draw_line(o + Vector2(k * cp, 0), o + Vector2(k * cp, n * cp), C_THICK if thick_v else C_LINE, 3.0 if thick_v else 1.0)
-		draw_line(o + Vector2(0, k * cp), o + Vector2(n * cp, k * cp), C_THICK if thick_h else C_LINE, 3.0 if thick_h else 1.0)
+		draw_line(o + Vector2(k * cp, 0), o + Vector2(k * cp, n * cp), C_THICK if thick_v else C_LINE, 3.0 if thick_v else 1.5)
+		draw_line(o + Vector2(0, k * cp), o + Vector2(n * cp, k * cp), C_THICK if thick_h else C_LINE, 3.0 if thick_h else 1.5)

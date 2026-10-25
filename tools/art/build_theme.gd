@@ -4,6 +4,8 @@
 extends SceneTree
 
 const P = preload("res://assets/art/art_palette.gd")
+const BTN_MH = 14
+const BTN_MV = 8
 
 func _sb(bg: Color, radius: int = 18, border: Color = Color(0, 0, 0, 0), bw: int = 0, shadow: bool = true, mh: int = 24, mv: int = 16) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
@@ -32,11 +34,13 @@ func _focus(radius: int = 18) -> StyleBoxFlat:
 	return s
 
 func _button(t: Theme, type: String, n: Color, h: Color, p: Color, fc: Color, radius: int = 18, border: Color = Color(0, 0, 0, 0), bw: int = 0) -> void:
-	t.set_stylebox("normal", type, _sb(n, radius, border, bw))
-	t.set_stylebox("hover", type, _sb(h, radius, border, bw))
-	t.set_stylebox("pressed", type, _sb(p, radius, border, bw, false))
-	t.set_stylebox("hover_pressed", type, _sb(p, radius, border, bw, false))
-	t.set_stylebox("disabled", type, _sb(P.BTN_DISABLED, radius, Color(0, 0, 0, 0), 0, false))
+	# Compact content margins (14 x 8): the game sets its own min sizes; wide margins would clip labels
+	# in the 4-up portrait tool row.
+	t.set_stylebox("normal", type, _sb(n, radius, border, bw, true, BTN_MH, BTN_MV))
+	t.set_stylebox("hover", type, _sb(h, radius, border, bw, true, BTN_MH, BTN_MV))
+	t.set_stylebox("pressed", type, _sb(p, radius, border, bw, false, BTN_MH, BTN_MV))
+	t.set_stylebox("hover_pressed", type, _sb(p, radius, border, bw, false, BTN_MH, BTN_MV))
+	t.set_stylebox("disabled", type, _sb(P.BTN_DISABLED, radius, P.GRID_LINE_THIN, 2, false, BTN_MH, BTN_MV))
 	t.set_stylebox("focus", type, _focus(radius))
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
 		t.set_color(c, type, fc)

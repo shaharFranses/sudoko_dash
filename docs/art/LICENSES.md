@@ -1,6 +1,6 @@
 # Art licenses log (Sudoku Dash)
 
-Art direction **approved 2026-10-24**. Art kit v1 is in `assets/art/` (branch `art/assets-v1`). It is **not yet wired into any scene**.
+Art direction **approved 2026-10-24**. Art kit v1 is in `assets/art/` (branch `art/assets-v1`) and is **wired into the game** on branch `art/integrate-v1` (theme on every screen, harbour art, task sprites, new splash/icon).
 Add a row whenever an art asset enters the repo.
 
 > Shipping note: export preset uses `export_filter="all_resources"`, so everything imported under `assets/art/` ships in the `.pck` even before it's referenced. Measured cost of kit v1: **+0.83 MB pck**. See STYLE_GUIDE.md §8.
@@ -30,6 +30,14 @@ All made 2026-10-24 with the Grok Bot image generation tool, in the locked style
 |---|---|
 | `harbour_bg_portrait.webp` (720x1280), `harbour_bg_landscape.webp` (1280x720) | Harbour base scene with empty slots (plinth, open water, quay corner, soil strips, jetty edge) |
 | `task_{dock,boats,flowers,lighthouse,cafe}_{unrestored,restored}.webp` | 10 transparent task sprites. Each before/after pair was generated together as one image so they match, then split |
+
+## Branding (shipped: `assets/branding/`)
+| File | Content | Source |
+|---|---|---|
+| `assets/branding/splash.png` (640x360, 256-colour PNG, rounded alpha corners) | Boot splash / web loader `index.png` | Approved cover key art `docs/art/moodboard/04_cover_key_art.jpg` (Grok Bot image generation tool, studio prompt), resized |
+| `assets/branding/icon.png` (256x256) | Project icon, web favicon + apple-touch icon | Lighthouse crop of the same cover art + studio-drawn gold star (PIL), rounded square |
+
+Same terms as the generated art above (studio-owned; re-check the image tool's terms before portal cover use).
 
 ## Docs-only images (`docs/`, excluded via `docs/.gdignore`)
 | File | Notes |

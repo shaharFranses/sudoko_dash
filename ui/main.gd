@@ -13,6 +13,12 @@ const Levels = preload("res://game/levels.gd")
 const HarbourView = preload("res://ui/harbour_view.gd")
 const UiLayout = preload("res://game/ui_layout.gd")
 const TouchScroll = preload("res://ui/touch_scroll.gd")
+const AP = preload("res://assets/art/art_palette.gd")   # art kit v1 palette (class_name ArtPalette)
+const ART_THEME = preload("res://assets/art/theme/sudoku_dash_theme.tres")
+const FONT_TITLE = preload("res://assets/art/fonts/Fraunces-BoldSoft.ttf")
+const FONT_HEADER = preload("res://assets/art/fonts/Fraunces-SemiBoldSoft.ttf")
+const BG_PORTRAIT = preload("res://assets/art/harbour/harbour_bg_portrait.webp")
+const BG_LANDSCAPE = preload("res://assets/art/harbour/harbour_bg_landscape.webp")
 
 var profile = Profile.new()
 var source = Source.new()
@@ -54,6 +60,8 @@ var _ad_busy: bool = false         # a rewarded ad is running (panel buttons sta
 var _results: Dictionary = {}      # results screen state, kept so a resize can rebuild it
 var _settings_back: String = "title"
 var _touch: bool = false
+var backdrop: TextureRect = null    # village scene behind menu screens (title / settings / results / restored)
+var _just_restored: String = ""    # task bought this visit: the Harbour fades its restored sprite in
 
 func _ready() -> void:
 	Dbg.main = self
@@ -63,7 +71,12 @@ func _ready() -> void:
 	if not d.is_empty(): profile.from_dict(d)
 	Sfx.set_reason("user", not profile.sound_on)
 	_touch = DisplayServer.is_touchscreen_available()
-	var bg = ColorRect.new(); bg.color = Color("bfe3ef"); bg.set_anchors_preset(PRESET_FULL_RECT); add_child(bg)
+	theme = ART_THEME   # art kit v1: fonts, button/panel styles and colours for every screen
+	var bg = ColorRect.new(); bg.color = AP.BG_LINEN; bg.set_anchors_preset(PRESET_FULL_RECT); add_child(bg)
+	backdrop = TextureRect.new(); backdrop.set_anchors_preset(PRESET_FULL_RECT)
+	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE; backdrop.visible = false
+	add_child(backdrop)
 	root = Control.new(); root.set_anchors_preset(PRESET_FULL_RECT); add_child(root)
 	apply_view()
 	get_viewport().size_changed.connect(_on_size_changed)
@@ -79,6 +92,9 @@ func _clear() -> void:
 	overlay = null
 	var vp = get_viewport_rect().size
 	compact = UiLayout.is_compact(vp)
+	if backdrop:   # menus sit on the village scene (cover-cropped, picked by aspect); grid + harbour on linen
+		backdrop.visible = screen_name in ["title", "settings", "results", "restored"]
+		backdrop.texture = BG_PORTRAIT if vp.y > vp.x * 1.2 else BG_LANDSCAPE
 	for c in root.get_children():
 		root.remove_child(c)
 		c.queue_free()
@@ -171,11 +187,48 @@ func _no_hover(b: Button) -> void:
 	b.add_theme_color_override("font_hover_color", b.get_theme_color("font_color"))
 	b.add_theme_color_override("font_hover_pressed_color", b.get_theme_color("font_pressed_color"))
 
+## Art kit v1 button look: theme type variation ("" = primary teal) + optional icon. Sizes untouched:
+## min sizes / containers come from the layout code; the icon is capped near the label's cap height.
+func _style(b: Button, kind: String = "", icon: String = "") -> Button:
+	b.theme_type_variation = kind
+	if icon != "":
+		var on_accent = kind in ["", "Button", "ButtonSecondary"]
+		var variant = "cream" if on_accent else "ink"
+		if icon in ["star", "coin"] and not on_accent: variant = "gold"
+		b.icon = load(AP.icon_path(icon, variant))
+		var fs = b.get_theme_font_size("font_size") if b.has_theme_font_size_override("font_size") else 28
+		b.add_theme_constant_override("icon_max_width", int(round(fs * 1.25)))
+		for c in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
+			b.add_theme_color_override(c, Color.WHITE)   # the icon file already carries its colour (ink / cream / gold)
+		b.add_theme_color_override("icon_disabled_color", Color(1, 1, 1, 0.55))
+	return b
+
+## Display (Fraunces) heading label: screen titles and panel headers.
+func _heading(text: String, fs: int = 40, title: bool = false) -> Label:
+	var l = _label(text, fs)
+	l.add_theme_font_override("font", FONT_TITLE if title else FONT_HEADER)
+	return l
+
+## Small icon for labels / pills.
+func _icon_rect(name: String, variant: String, px: float, alpha: float = 1.0) -> TextureRect:
+	var t = TextureRect.new()
+	t.texture = load(AP.icon_path(name, variant))
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.custom_minimum_size = Vector2(px, px)
+	t.modulate.a = alpha
+	return t
+
+## Panel stylebox from the theme (PanelModal look) with the layout's own content margin.
+func _panel_sb(margin: int) -> StyleBoxFlat:
+	var sb: StyleBoxFlat = ART_THEME.get_stylebox("panel", "PanelModal").duplicate()
+	sb.set_content_margin_all(margin)
+	return sb
+
 ## Compact layout distances are authored for a 420-wide screen; scale them to the 720 base.
 func _u(x: float) -> int:
 	return int(round(x * (UiLayout.COMPACT_SCALE if compact else 1.0)))
 
-func _label(text: String, fs: int = 24, col: Color = Color("1f2f3a")) -> Label:
+func _label(text: String, fs: int = 24, col: Color = AP.TEXT_INK) -> Label:
 	var l = Label.new()
 	l.text = text
 	if compact: fs = int(round(fs * 0.85 * UiLayout.COMPACT_SCALE))
@@ -188,10 +241,8 @@ func _label(text: String, fs: int = 24, col: Color = Color("1f2f3a")) -> Label:
 func _center_box(min_w: int = 520) -> VBoxContainer:
 	var cc = CenterContainer.new(); cc.set_anchors_preset(PRESET_FULL_RECT); root.add_child(cc)
 	var panel = PanelContainer.new()
-	var sb = StyleBoxFlat.new(); sb.bg_color = Color("fffaf0"); sb.set_corner_radius_all(18); sb.set_content_margin_all(24)
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", _panel_sb(_u(16) if compact else 24))
 	cc.add_child(panel)
-	if compact: sb.set_content_margin_all(_u(16))
 	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(_panel_w(min_w), 0)
 	v.add_theme_constant_override("separation", _u(12))
 	panel.add_child(v)
@@ -208,10 +259,10 @@ func _wrap_buttons(v: Control) -> void:
 
 ## Coin-priced button: disabled with price + "Need N more coins" line when unaffordable (never hidden).
 func _coin_option(parent: Control, text: String, price: int, cb: Callable) -> void:
-	var b = _btn("%s (%d coins)" % [text, price], cb)
+	var b = _style(_btn("%s (%d coins)" % [text, price], cb), "", "coin")
 	parent.add_child(b)
 	var need = profile.need_more(price)
-	var l = _label("Need %d more coins" % need if need > 0 else " ", 20, Color("b04040"))
+	var l = _label("Need %d more coins" % need if need > 0 else " ", 20, AP.ERROR_INK)
 	parent.add_child(l)
 	b.disabled = need > 0
 
@@ -226,12 +277,12 @@ func _build_title() -> void:
 	Ads.set_context("menu")
 	_clear()
 	var v = _center_box()
-	v.add_child(_label("Sudoku Dash", 56))
+	v.add_child(_heading("Sudoku Dash", 56, true))
 	v.add_child(_label("Restore the Harbour, one puzzle at a time.", 24))
 	var play = _btn("Play", show_harbour, 34, 80)
 	play.name = "PlayButton"
 	v.add_child(play)
-	var st = _btn("Settings", func(): show_settings("title"), 24, 56)
+	var st = _style(_btn("Settings", func(): show_settings("title"), 24, 56), "ButtonChip", "settings")
 	st.name = "SettingsButton"
 	v.add_child(st)
 
@@ -242,11 +293,11 @@ func show_settings(back: String = "") -> void:
 	Ads.set_context("menu")
 	_clear()
 	var v = _center_box()
-	v.add_child(_label("Settings", 44))
-	var sb = _btn("Sound: On" if profile.sound_on else "Sound: Off", _toggle_sound, 26, 64)
+	v.add_child(_heading("Settings", 44))
+	var sb = _style(_btn("Sound: On" if profile.sound_on else "Sound: Off", _toggle_sound, 26, 64), "ButtonChip", "sound_on" if profile.sound_on else "sound_off")
 	sb.name = "SoundButton"
 	v.add_child(sb)
-	var bb = _btn("Back", func(): show_harbour() if _settings_back == "harbour" else _build_title(), 24, 64)
+	var bb = _style(_btn("Back", func(): show_harbour() if _settings_back == "harbour" else _build_title(), 24, 64), "ButtonChip", "back")
 	bb.name = "SettingsBack"
 	v.add_child(bb)
 
@@ -270,6 +321,9 @@ func show_harbour() -> void:
 	box.add_theme_constant_override("separation", 10)
 	root.add_child(box)
 	var hv = HarbourView.new(); hv.profile = profile
+	hv.name = "HarbourView"
+	hv.reveal_id = _just_restored   # gentle fade-in of a task restored this visit
+	_just_restored = ""
 	hv.size_flags_horizontal = SIZE_EXPAND_FILL; hv.size_flags_vertical = SIZE_EXPAND_FILL
 	hv.custom_minimum_size = Vector2(300, 220)
 	box.add_child(hv)
@@ -279,6 +333,8 @@ func show_harbour() -> void:
 	sc.name = "HarbourScroll"
 	sc.drag_enabled = _touch   # desktop mouse behaviour unchanged
 	sc.drag_threshold = 10.0 * units_per_css
+	var lsb = StyleBoxFlat.new(); lsb.bg_color = Color(AP.PANEL_CREAM, 0.94); lsb.set_corner_radius_all(18)   # no content margin: geometry unchanged
+	sc.add_theme_stylebox_override("panel", lsb)
 	box.add_child(sc)
 	var v = VBoxContainer.new(); v.size_flags_horizontal = SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 8)
@@ -289,7 +345,17 @@ func show_harbour() -> void:
 		hm.add_child(v)
 	else:
 		sc.add_child(v)
-	v.add_child(_label("Harbour  |  Stars %d   Coins %d   Tokens %d" % [profile.stars, profile.coins, profile.tokens], 24))
+	v.add_child(_heading("Harbour", 34))
+	var pills = HBoxContainer.new(); pills.alignment = BoxContainer.ALIGNMENT_CENTER
+	pills.add_theme_constant_override("separation", _u(6))
+	var ipx = _u(28)
+	for it in [["star", "gold", "Stars %d" % profile.stars], ["coin", "gold", "Coins %d" % profile.coins], ["hint", "ink", "Tokens %d" % profile.tokens]]:
+		pills.add_child(_icon_rect(it[0], it[1], ipx))
+		var pl = _label(it[2], 22); pl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		pl.add_theme_font_override("font", load(AP.FONT_UI_BOLD))
+		pills.add_child(pl)
+		if it[0] != "hint": pills.add_child(_spacer(_u(10)))
+	v.add_child(pills)
 	if profile.current_grid.has("board"):
 		v.add_child(_btn("Resume grid", resume_grid, 28, 72))
 	if not profile.path_finished():
@@ -300,36 +366,51 @@ func show_harbour() -> void:
 	v.add_child(_btn("Quick 6x6", start_quick, 24))
 	var tiers = HBoxContainer.new()
 	for t in [1, 2, 3, 4]:
-		var b = _btn("T%d" % t, func(): classic_tier = t; save(); show_harbour(), 22, 56)
+		var b = _style(_btn("T%d" % t, func(): classic_tier = t; save(); show_harbour(), 22, 56), "ButtonChip")
 		b.toggle_mode = true; b.button_pressed = t == classic_tier
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		tiers.add_child(b)
 	v.add_child(tiers)
 	v.add_child(_btn("Classic 9x9 (tier %d)" % classic_tier, start_classic, 24))
-	v.add_child(_label("Tasks", 26))
+	v.add_child(_heading("Tasks", 28))
 	for t in Profile.TASKS:
 		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", _u(8))
+		var thumb = TextureRect.new()
+		thumb.texture = load(AP.task_sprite_path(t.id, profile.tasks.has(t.id)))
+		thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		thumb.custom_minimum_size = Vector2(_u(44), _u(44))
+		row.add_child(thumb)
 		var l = _label(t.name, 22); l.size_flags_horizontal = SIZE_EXPAND_FILL; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		row.add_child(l)
 		if profile.tasks.has(t.id):
 			var ch = profile.decor.get(t.id, 0)
 			var id = t.id
 			var n = t.decor.size()
-			row.add_child(_btn(t.decor[ch], func(): profile.set_decor(id, (ch + 1) % n); save(); show_harbour(), 20, 56))
+			row.add_child(_style(_btn(t.decor[ch], func(): profile.set_decor(id, (ch + 1) % n); save(); show_harbour(), 20, 56), "ButtonChip"))
 		else:
 			var id2 = t.id
-			var b = _btn("Buy (%d stars)" % t.cost if profile.task_unlocked(t.id) else "Locked", func(): _buy_task(id2), 20, 56)
-			b.disabled = profile.stars < t.cost or not profile.task_unlocked(t.id)
+			var unl = profile.task_unlocked(t.id)
+			var b = _btn("Buy (%d stars)" % t.cost if unl else "Locked", func(): _buy_task(id2), 20, 56)
+			b.disabled = profile.stars < t.cost or not unl
+			if not unl: _style(b, "ButtonLocked", "lock")
+			else: _style(b, "ButtonSecondary", "star")
+			if b.disabled: b.icon = load(AP.icon_path("lock" if not unl else "star", "ink"))
 			row.add_child(b)
 		v.add_child(row)
 	if profile.area_restored():
-		v.add_child(_btn("Area restored!", show_area_restored, 24))
-	var stb = _btn("Settings", func(): show_settings("harbour"), 22, 56)
+		v.add_child(_style(_btn("Area restored!", show_area_restored, 24), "ButtonSecondary", "star"))
+	var stb = _style(_btn("Settings", func(): show_settings("harbour"), 22, 56), "ButtonChip", "settings")
 	stb.name = "SettingsButton"
 	v.add_child(stb)
 
+func _spacer(w: float) -> Control:
+	var c = Control.new(); c.custom_minimum_size = Vector2(w, 0)
+	return c
+
 func _buy_task(id: String) -> void:
 	if profile.buy_task(id):
+		_just_restored = id
 		save()
 		if profile.area_restored():
 			show_area_restored()
@@ -340,7 +421,7 @@ func show_area_restored() -> void:
 	screen_name = "restored"
 	_clear()
 	var v = _center_box()
-	v.add_child(_label("Area restored!", 48))
+	v.add_child(_heading("Area restored!", 48, true))
 	v.add_child(_label("The Harbour is bustling again. Extra stars carry over to the next area.", 24))
 	v.add_child(_btn("Back to Harbour", show_harbour))
 
@@ -431,7 +512,7 @@ func _build_grid_screen() -> void:
 	mc.add_child(outer)
 	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, bh)
 	outer.add_child(top)
-	var back = _btn("Back", _leave_grid, 26, 56 if short else 60); back.name = "BackButton"
+	var back = _style(_btn("Back", _leave_grid, 26, 56 if short else 60), "ButtonChip", "back"); back.name = "BackButton"
 	top.add_child(back)
 	var tl = _label(_grid_title(), 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
 	tl.autowrap_mode = TextServer.AUTOWRAP_OFF; tl.clip_text = true
@@ -440,7 +521,7 @@ func _build_grid_screen() -> void:
 	mistakes_label.name = "MistakesLabel"
 	mistakes_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	top.add_child(mistakes_label)
-	var hint = _btn("Hint", _open_hint_panel, 26, 56 if short else 60); hint.name = "HintButton"
+	var hint = _style(_btn("Hint", _open_hint_panel, 26, 56 if short else 60), "ButtonSecondary", "hint"); hint.name = "HintButton"
 	top.add_child(hint)
 	var body = HBoxContainer.new() if landscape else VBoxContainer.new()
 	body.size_flags_vertical = SIZE_EXPAND_FILL
@@ -452,11 +533,11 @@ func _build_grid_screen() -> void:
 	side.custom_minimum_size = Vector2(min(420, vp.x * 0.4) if landscape else vp.x - 2 * GRID_MARGIN, 0 if landscape else min(vp.y * 0.38, 360))
 	side.add_theme_constant_override("separation", 8)
 	body.add_child(side)
-	objective_label = _label("", 22, Color("1d4f73"))
+	objective_label = _label("", 22, AP.ACCENT_TEAL_PRESSED)
 	objective_label.name = "ObjectiveLabel"
 	side.add_child(objective_label)
 	_make_tide_bar(side, 18)
-	teach_label = _label("", 20, Color("6a4b00"))
+	teach_label = _label("", 20, AP.ACCENT_TERRACOTTA_PRESSED)
 	teach_label.name = "TeachLabel"
 	side.add_child(teach_label)
 	var pad = GridContainer.new()
@@ -466,7 +547,7 @@ func _build_grid_screen() -> void:
 	pad.add_theme_constant_override("h_separation", 8); pad.add_theme_constant_override("v_separation", 8)
 	side.add_child(pad)
 	for d in range(1, board.size + 1):
-		var b = _btn(str(d), _on_digit.bind(d), 34, bh)
+		var b = _style(_btn(str(d), _on_digit.bind(d), 34, bh), "ButtonTile")
 		b.name = "Digit%d" % d
 		b.custom_minimum_size = Vector2(56, 56) if short else Vector2(64, 64)
 		b.size_flags_horizontal = SIZE_EXPAND_FILL; b.size_flags_vertical = SIZE_EXPAND_FILL
@@ -475,18 +556,18 @@ func _build_grid_screen() -> void:
 		pad.add_child(b)
 	var tools = HBoxContainer.new(); tools.add_theme_constant_override("separation", 8)
 	side.add_child(tools)
-	notes_btn = _btn("Notes: OFF", _toggle_notes, 22, bh); notes_btn.name = "NotesButton"
-	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL
+	notes_btn = _style(_btn("Notes: OFF", _toggle_notes, 22, bh), "ButtonChip"); notes_btn.name = "NotesButton"
+	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL; notes_btn.toggle_mode = true
 	tools.add_child(notes_btn)
-	var ub = _btn("Undo", _undo, 22, bh); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
+	var ub = _style(_btn("Undo", _undo, 22, bh), "ButtonChip"); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
 	tools.add_child(ub)
-	var eb = _btn("Erase", _erase, 22, bh); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
+	var eb = _style(_btn("Erase", _erase, 22, bh), "ButtonChip"); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
 	if short and board.size > 6:
 		eb.size_flags_vertical = SIZE_EXPAND_FILL
 		pad.add_child(eb)   # 9x9: Erase fills the 10th pad slot (5 + 5)
 	else:
 		tools.add_child(eb)
-	status_label = _label("", 18, Color("40505a"))
+	status_label = _label("", 18, AP.DIGIT_NOTES)
 	status_label.name = "StatusLabel"
 	status_label.visible = not short   # no room on a phone held sideways; the pad covers every action
 	side.add_child(status_label)
@@ -537,7 +618,7 @@ func _build_grid_compact(sel: int) -> void:
 	mc.add_child(outer)
 	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", _u(6))
 	outer.add_child(top)
-	var back = _btn("Back", _leave_grid, 24, 56); back.name = "BackButton"
+	var back = _style(_btn("Back", _leave_grid, 24, 56), "ButtonChip"); back.name = "BackButton"
 	back.custom_minimum_size.x = _u(72)
 	top.add_child(back)
 	var tl = _label(_grid_title(), 24); tl.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -548,14 +629,14 @@ func _build_grid_compact(sel: int) -> void:
 	mistakes_label.name = "MistakesLabel"
 	mistakes_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	top.add_child(mistakes_label)
-	objective_label = _label("", 24, Color("1d4f73"))
+	objective_label = _label("", 24, AP.ACCENT_TEAL_PRESSED)
 	objective_label.name = "ObjectiveLabel"
 	outer.add_child(objective_label)
 	_make_tide_bar(outer, _u(14))
 	_make_grid_view(sel)
 	grid_view.custom_minimum_size = Vector2(0, _u(180))
 	outer.add_child(grid_view)
-	teach_label = _label("", 22, Color("6a4b00"))
+	teach_label = _label("", 22, AP.ACCENT_TERRACOTTA_PRESSED)
 	teach_label.name = "TeachLabel"
 	teach_label.custom_minimum_size = Vector2(0, _u(44))   # room for a 2-line hint without the grid jumping
 	teach_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -566,7 +647,7 @@ func _build_grid_compact(sel: int) -> void:
 	pad.add_theme_constant_override("h_separation", _u(6)); pad.add_theme_constant_override("v_separation", _u(6))
 	outer.add_child(pad)
 	for d in range(1, board.size + 1):
-		var b = _btn(str(d), _on_digit.bind(d), 36, 60)
+		var b = _style(_btn(str(d), _on_digit.bind(d), 36, 60), "ButtonTile")
 		b.name = "Digit%d" % d
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		b.toggle_mode = true
@@ -575,18 +656,18 @@ func _build_grid_compact(sel: int) -> void:
 	var tools = HBoxContainer.new(); tools.add_theme_constant_override("separation", _u(6))
 	outer.add_child(tools)
 	var tfs = 24 if board.size > 6 else 21   # 6x6 has four tools in the row: keep "Notes: OFF" unclipped
-	var eb = _btn("Erase", _erase, tfs, 60); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
+	var eb = _style(_btn("Erase", _erase, tfs, 60), "ButtonChip"); eb.name = "EraseButton"; eb.size_flags_horizontal = SIZE_EXPAND_FILL
 	if board.size > 6: pad.add_child(eb)   # 9x9: Erase fills the 10th pad slot (5 + 5)
-	notes_btn = _btn("Notes: OFF", _toggle_notes, tfs, 60); notes_btn.name = "NotesButton"
-	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL; notes_btn.clip_text = true
+	notes_btn = _style(_btn("Notes: OFF", _toggle_notes, tfs, 60), "ButtonChip"); notes_btn.name = "NotesButton"
+	notes_btn.size_flags_horizontal = SIZE_EXPAND_FILL; notes_btn.clip_text = true; notes_btn.toggle_mode = true
 	if board.size <= 6: notes_btn.size_flags_stretch_ratio = 1.5   # widest label among four tools
 	tools.add_child(notes_btn)
 	if board.size <= 6: tools.add_child(eb)
-	var ub = _btn("Undo", _undo, tfs, 60); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
+	var ub = _style(_btn("Undo", _undo, tfs, 60), "ButtonChip"); ub.name = "UndoButton"; ub.size_flags_horizontal = SIZE_EXPAND_FILL
 	tools.add_child(ub)
-	var hint = _btn("Hint", _open_hint_panel, tfs, 60); hint.name = "HintButton"; hint.size_flags_horizontal = SIZE_EXPAND_FILL
+	var hint = _style(_btn("Hint", _open_hint_panel, tfs, 60), "ButtonSecondary"); hint.name = "HintButton"; hint.size_flags_horizontal = SIZE_EXPAND_FILL
 	tools.add_child(hint)
-	status_label = _label("", 18, Color("40505a"))
+	status_label = _label("", 18, AP.DIGIT_NOTES)
 	status_label.name = "StatusLabel"
 	status_label.visible = false   # keyboard help is for desktop; phones use the pad
 	outer.add_child(status_label)
@@ -595,6 +676,7 @@ func _refresh() -> void:
 	if board == null or grid_view == null: return
 	mistakes_label.text = ("Mistakes %d/%d" % [board.mistakes, board.max_mistakes]) if board.max_mistakes > 0 else "Warm-up: no mistake limit"
 	notes_btn.text = "Notes: ON" if notes_mode else "Notes: OFF"
+	if notes_btn.toggle_mode: notes_btn.set_pressed_no_signal(notes_mode)   # chip shows teal while notes are on
 	status_label.text = ("Tap a cell, then a digit. Or tap a digit, then cells." if _touch else "Tap a cell then a digit, or a digit then cells. Keys: 1-%d, arrows, Backspace, N, Ctrl+Z" % board.size)
 	objective_label.text = Obj.label(level, board.cells, board.solution, targets) if not level.is_empty() else ""
 	_refresh_timer()
@@ -753,14 +835,12 @@ func _open_overlay() -> VBoxContainer:
 	overlay = Control.new(); overlay.set_anchors_preset(PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(overlay)
-	var dim = ColorRect.new(); dim.color = Color(0.1, 0.15, 0.2, 0.82); dim.set_anchors_preset(PRESET_FULL_RECT)
+	var dim = ColorRect.new(); dim.color = Color(0.16, 0.15, 0.22, 0.72); dim.set_anchors_preset(PRESET_FULL_RECT)   # lilac-ink scrim
 	overlay.add_child(dim)
 	var cc = CenterContainer.new(); cc.set_anchors_preset(PRESET_FULL_RECT); overlay.add_child(cc)
 	var panel = PanelContainer.new()
-	var sb = StyleBoxFlat.new(); sb.bg_color = Color("fffaf0"); sb.set_corner_radius_all(18); sb.set_content_margin_all(24)
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", _panel_sb(_u(16) if compact else 24))
 	cc.add_child(panel)
-	if compact: sb.set_content_margin_all(_u(16))
 	var v = VBoxContainer.new(); v.custom_minimum_size = Vector2(_panel_w(560), 0)
 	v.add_theme_constant_override("separation", _u(10))
 	panel.add_child(v)
@@ -790,16 +870,16 @@ func _open_hint_panel() -> void:
 	_clear_teach()
 	var v = _open_overlay()
 	overlay.name = "HintPanel"
-	v.add_child(_label("Hint", 36))
+	v.add_child(_heading("Hint", 36))
 	v.add_child(_label("Tokens: %d   Coins: %d" % [profile.tokens, profile.coins], 22))
 	var sel = grid_view.selected
 	var can_reveal = sel >= 0 and not board.is_given(sel) and board.cells[sel] != board.solution[sel]
 	if not board.active_hint().is_empty():
-		var again = _btn("Show my last hint again (free)", _reshow_hint)
+		var again = _style(_btn("Show my last hint again (free)", _reshow_hint), "ButtonChip", "hint")
 		again.name = "ReshowHint"
 		v.add_child(again)
 	if profile.tokens > 0:
-		v.add_child(_btn("Teach me the next step (1 token)", func(): _pay_hint("teach", "token")))
+		v.add_child(_style(_btn("Teach me the next step (1 token)", func(): _pay_hint("teach", "token")), "", "hint"))
 		var rb = _btn("Reveal selected cell (1 token)", func(): _pay_hint("reveal", "token"))
 		rb.disabled = not can_reveal
 		v.add_child(rb)
@@ -808,11 +888,11 @@ func _open_hint_panel() -> void:
 		_coin_option(v, "Reveal selected cell", Profile.HINT_COIN_PRICE, func(): _pay_hint("reveal", "coins"))
 		if not can_reveal: v.get_child(v.get_child_count() - 2).disabled = true
 		if Ads.available() and profile.tokens < Profile.TOKEN_CAP:
-			var ab = _btn("Watch an ad for +1 token", _ad_for_token)
+			var ab = _style(_btn("Watch an ad for +1 token", _ad_for_token), "ButtonSecondary")
 			ab.name = "RewardedToken"
 			v.add_child(ab)
-	if not can_reveal: v.add_child(_label("Select an empty cell to reveal it.", 18, Color("40505a")))
-	v.add_child(_btn("Back to grid", _close_overlay, 24))
+	if not can_reveal: v.add_child(_label("Select an empty cell to reveal it.", 18, AP.DIGIT_NOTES))
+	v.add_child(_style(_btn("Back to grid", _close_overlay, 24), "ButtonChip", "back"))
 	Dbg.publish()
 
 func _lock_overlay() -> void:
@@ -900,7 +980,7 @@ func _open_second_chance() -> void:
 	overlay.name = "SecondChancePanel"
 	var capped = profile.sc_capped(Dbg.now_ms())
 	var only_retry = board.failed or board.second_chance_used or capped
-	v.add_child(_label("Out of mistakes!" if not board.failed else "Grid over", 36))
+	v.add_child(_heading("Out of mistakes!" if not board.failed else "Grid over", 36))
 	if only_retry:
 		var why = "You've used the second chance for this grid." if (board.second_chance_used or board.failed) else "Second chances are used up for now (3 per 24 hours)."
 		v.add_child(_label(why, 22))
@@ -908,10 +988,10 @@ func _open_second_chance() -> void:
 		v.add_child(_label("Keep your board and clear the wrong digits?", 22))
 		_coin_option(v, "Continue", Profile.CONTINUE_COIN_PRICE, func(): _second_chance("coins"))
 		if Ads.available():
-			var ab = _btn("Continue free (watch an ad)", func(): _second_chance("ad"))
+			var ab = _style(_btn("Continue free (watch an ad)", func(): _second_chance("ad")), "ButtonSecondary")
 			ab.name = "RewardedContinue"
 			v.add_child(ab)
-	var rb = _btn("Retry from the start", _retry, 24); rb.name = "RetryButton"
+	var rb = _style(_btn("Retry from the start", _retry, 24), "ButtonChip", "undo"); rb.name = "RetryButton"
 	v.add_child(rb)
 	Dbg.publish()
 
@@ -978,9 +1058,15 @@ func _build_results() -> void:
 	screen_name = "results"
 	_clear()
 	var v = _center_box()
-	v.add_child(_label("Level complete!" if r.has("level_stars") else "Grid complete!", 40))
+	v.add_child(_heading("Level complete!" if r.has("level_stars") else "Grid complete!", 40, true))
 	if r.has("level_stars"):
-		var sl = _label("Stars: %d / 3" % r.level_stars, 30, Color("b8860b"))
+		var row = HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", _u(10))
+		for k in 3:   # earned = gold star, missing = faint ink outline (never colour-only: the label says it too)
+			row.add_child(_icon_rect("star", "gold" if k < int(r.level_stars) else "ink", _u(64), 1.0 if k < int(r.level_stars) else 0.3))
+		v.add_child(row)
+		var sl = _label("Stars: %d / 3" % r.level_stars, 26, AP.TEXT_INK)
+		sl.add_theme_font_override("font", load(AP.FONT_UI_BOLD))
 		sl.name = "LevelStars"
 		v.add_child(sl)
 	results_label = _label("+%d coins   +%d stars%s%s" % [r.coins, r.stars, ("   +1 token" if r.token > 0 else ""), ("  (doubled!)" if _results.doubled else "")], 28)
@@ -990,7 +1076,7 @@ func _build_results() -> void:
 	if _results.offer == "rewarded" and not _results.doubled:
 		var cb = int(_results.get("base_coins", r.coins))
 		_results["base_coins"] = cb
-		var ab = _btn("Double coins (watch an ad)", func(): _double(cb))
+		var ab = _style(_btn("Double coins (watch an ad)", func(): _double(cb)), "ButtonSecondary", "coin")
 		ab.name = "RewardedDouble"
 		ab.disabled = _ad_busy
 		v.add_child(ab)

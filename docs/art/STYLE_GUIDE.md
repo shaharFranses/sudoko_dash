@@ -132,3 +132,21 @@ fonttools varLib.instancer Fraunces[SOFT,WONK,opsz,wght].ttf wght=700 opsz=48 SO
 pyftsubset fr700.ttf --unicodes="U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2030,U+2039-203A,U+20AC,U+2122,U+2190-2193,U+2212,U+00D7,U+FEFF,U+FFFD" --layout-features='kern,liga,lnum,tnum,case' --name-IDs='*' --output-file=assets/art/fonts/Fraunces-BoldSoft.ttf
 ```
 AHN: `fonttools varLib.instancer AtkinsonHyperlegibleNext[wght].ttf wght=500 -o ahn500.ttf`, then the same subset command. Keep `--name-IDs='*'` so the OFL notice stays inside the font.
+
+
+## 10. In-game integration (art/integrate-v1)
+- `ui/main.gd` sets the kit theme on the root Control; screens pick looks with `theme_type_variation` only
+  (primary = default teal Button, `ButtonSecondary` = Hint / Buy / rewarded, `ButtonChip` = Back, Settings, tiers,
+  Notes (toggle), Undo, Erase, decor, `ButtonTile` = digit pad, `ButtonLocked` + lock icon = locked tasks).
+  Sizes, containers and the 88 / 56 unit touch minimums are unchanged; button content margins are 14 x 8 so labels
+  never clip in the 4-up portrait tool row. Icons are left off the portrait tool row for the same reason.
+- Panels/modals reuse the `PanelModal` stylebox with the layout's own content margin; the scrim is lilac ink.
+- Headings use Fraunces (`_heading()`), body/UI Atkinson Hyperlegible Next. Results show 3 star icons + the text.
+- Grid (`ui/grid_view.gd`): ArtPalette colours, given = AHN Bold, player = AHN Medium, notes = AHN Regular,
+  digits 0.68 x cell, wrong digits are ERROR_INK + underline + shake (never colour-only), teach step = soft sage.
+- Harbour (`ui/harbour_view.gd`): portrait or landscape background chosen by the view's aspect (>= 1.35 = landscape),
+  cover-cropped and centred on the task sprites; if a short/wide rect cannot show every sprite while covering, it
+  zooms out just enough and fills the edge with a mirrored copy of the art. Sprites swap unrestored -> restored by
+  `profile.tasks`; a newly bought task cross-fades in over 1.1 s with a gold ring. Decor choices beyond the first are
+  a gentle tint for now (dedicated decor sprites = kit v2).
+- Menus (title, settings, results, area restored) sit on the harbour background; grid + harbour list on linen.
