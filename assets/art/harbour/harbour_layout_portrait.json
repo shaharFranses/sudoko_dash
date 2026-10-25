@@ -1,0 +1,11 @@
+{
+  "_note": "Starting positions (top-left, px) and scale for task sprites over harbour_bg_portrait.webp at its native 720x1280. Measured from tools/art/theme_preview.gd; Build will tune these during integration. Lighthouse sits on the stone plinth, dock attaches to the lower-right harbour edge, flowerbeds go on the soil strip along the quay, cafe terrace goes in the open corner in front of the lower-left building.",
+  "base_size": [720, 1280],
+  "tasks": {
+    "lighthouse": {"pos": [553, 280], "scale": 0.33},
+    "boats":      {"pos": [300, 640], "scale": 0.42},
+    "dock":       {"pos": [480, 760], "scale": 0.38},
+    "cafe":       {"pos": [10, 690],  "scale": 0.50},
+    "flowers":    {"pos": [330, 900], "scale": 0.40}
+  }
+}
