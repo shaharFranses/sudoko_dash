@@ -143,9 +143,9 @@ body { position: fixed; inset: 0; }
 /* Safe-area insets (notch / home bar), read by the game through SD_VIEW.insets(). */
 :root { --sd-sat: env(safe-area-inset-top, 0px); --sd-sar: env(safe-area-inset-right, 0px);
   --sd-sab: env(safe-area-inset-bottom, 0px); --sd-sal: env(safe-area-inset-left, 0px); }
-/* PKD studio intro: navy loading screen, PKD splash sized like the intro (shorter side). */
+/* PKD studio intro v1.1: plain navy loader (progress bar only); the PKD mark appears once, at the end of the morph. */
 body, #status { background-color: #1E1B3A !important; }
-#status-splash { width: min(100vw, 100vh); height: min(100vw, 100vh); max-width: none; max-height: none; object-fit: contain; }
+#status-splash { visibility: hidden !important; }
 </style>
 <script>
 /* Mobile view glue: one viewport meta (ours, the last), safe-area insets for the game, and no browser
@@ -242,7 +242,7 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, t
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5120768,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5069808,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
