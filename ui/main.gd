@@ -511,6 +511,7 @@ func _build_grid_screen() -> void:
 	outer.add_theme_constant_override("separation", 6)
 	mc.add_child(outer)
 	var top = HBoxContainer.new(); top.custom_minimum_size = Vector2(0, bh)
+	top.add_theme_constant_override("separation", 12)   # breathing room between "Mistakes" and the Hint button
 	outer.add_child(top)
 	var back = _style(_btn("Back", _leave_grid, 26, 56 if short else 60), "ButtonChip", "back"); back.name = "BackButton"
 	top.add_child(back)

@@ -15,7 +15,9 @@ func test_art_theme_applied_to_the_ui():
 	assert_eq(main.theme.resource_path, "res://assets/art/theme/sudoku_dash_theme.tres")
 	var play: Button = main.root.find_child("PlayButton", true, false)
 	assert_eq(play.get_theme_font("font").resource_path, ArtPalette.FONT_UI_BOLD, "buttons use Atkinson Hyperlegible Next Bold")
-	assert_eq(main.root.find_child("SettingsButton", true, false).theme_type_variation, "ButtonChip")
+	var st: Button = main.root.find_child("SettingsButton", true, false)
+	assert_eq(st.theme_type_variation, "ButtonChip")
+	assert_eq(st.get_theme_font("font").resource_path, ArtPalette.FONT_UI_BOLD, "variations get the bold UI font too")
 
 func test_harbour_art_picked_by_aspect():
 	assert_eq(HarbourView.pick(Vector2(720, 700)), "portrait")

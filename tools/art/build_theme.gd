@@ -50,6 +50,10 @@ func _button(t: Theme, type: String, n: Color, h: Color, p: Color, fc: Color, ra
 	t.set_color("icon_disabled_color", type, P.TEXT_INK)
 	t.set_constant("h_separation", type, 12)
 	t.set_constant("icon_max_width", type, 48)
+	# Type variations do NOT inherit font/font_size from "Button" in this theme (Godot falls back to the theme
+	# default font), so every button type gets the bold UI font explicitly.
+	t.set_font("font", type, load(P.FONT_UI_BOLD))
+	t.set_font_size("font_size", type, 30)
 
 func _initialize() -> void:
 	var t := Theme.new()
