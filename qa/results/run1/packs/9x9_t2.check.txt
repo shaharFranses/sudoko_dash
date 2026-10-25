@@ -1,2 +1,0 @@
-size 9 tier 2: 300/300 pass
-TOTAL 300/300 PASS

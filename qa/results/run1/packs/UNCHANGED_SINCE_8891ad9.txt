@@ -1,8 +1,0 @@
-sudoku/ data/ tools/ unchanged 8891ad9..05a922d
-62aa4425fc0d34ccc6763b8c744a2a66482ed0e2fa30961e83be1691ac412bcf  data/packs/4x4_t1.json
-3fddd18adc9f6febdb5a441db63305458f2463e27fffeb9e255f6e41a2366ecd  data/packs/6x6_t1.json
-d756d9dbc940be6172fc6bcc9f49b86823271f71cf5dd80239b94eae34558d95  data/packs/6x6_t2.json
-5110ea4126f7e3e8fc5692b2109e9590987512e2e05b49626fa430c21cf24d36  data/packs/9x9_t1.json
-85e115d7c9fa89bfc236aec39358b5be135cd96b9858578b5e75c7e515fe821c  data/packs/9x9_t2.json
-c7324bd6c25e96b57241a1d7825ce2b08e2bfa0bfe03d0cc4548966c85c4a9a9  data/packs/9x9_t3.json
-fe6f387b169d8ecf4883a45344ce4d58ef31bfda2c199fcae94ac0759598fcab  data/packs/9x9_t4.json

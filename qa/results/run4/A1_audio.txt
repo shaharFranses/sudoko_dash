@@ -1,9 +1,0 @@
-054dd29: web/head_include.html (release index.html) page-level gate + autoload/sfx.gd.
-- Gate: shouldRun = !ad && !document.hidden && focused. apply() suspends running contexts and resumes suspended ones (via the original resume). Triggers: visibilitychange, window blur (focused=false), focus (focused=true), pointerdown/touchend/keydown/mousedown (focused=true then apply), new context creation (setTimeout apply). PASS.
-- Ad authoritative: Sfx on Ads.ad_started -> bus reason "ad" + SD_AUDIO.setAd(true); ad_finished -> both cleared. Each context's resume() is replaced with a gate-checked version (returns a resolved Promise while gated), so neither Godot's own gesture-resume nor a tap/focus can restart audio mid-ad. PASS.
-- Bus mute: the bus is muted for "ad" (Godot) and "hidden" (0.25 s document.hidden poll). Blur does NOT mute the bus; it suspends the AudioContext, which silences all output. Functionally equivalent; noted only because the item says "mute the bus".
-- Stuck-muted analysis: ad_started/ad_finished are paired on the single _request exit (finished/error/timeout, SDK path bounded at 8 s); "hidden" clears on visible; focused is reset by focus or any gesture. No permanent path found. Residual edges:
-  (a) iOS Safari 'interrupted' state (call/Siri) isn't handled by apply() (it only checks 'suspended'/'running'), so recovery relies on the next gesture through Godot's resume (which the gate passes when shouldRun).
-  (b) resume() from non-gesture events (focus/visibilitychange) may be refused by the autoplay policy; the next tap resumes it. That's normal.
-  (c) window.SD_AUDIO (setAd/state/apply) is exposed in release; not a cheat, but page script could unmute during an ad.
-- GUT: audio tests pass (GUT.txt).

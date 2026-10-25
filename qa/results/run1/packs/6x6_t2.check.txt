@@ -1,2 +1,0 @@
-size 6 tier 2: 100/100 pass
-TOTAL 100/100 PASS

@@ -1,4 +1,0 @@
-A diverged random-fill boards, 50 per tier t1-t4: 200/200 valid; techniques={'naked_single': 200}
-B diverged boards stuck after singles, t3/t4 x100 (elimination steps): 200/200 valid; techniques={'naked_pair': 142, 'hidden_pair': 34, 'pointing': 22, 'box_line_reduction': 2}
-step_ms n=200 median=0.10 p95=0.14 max=0.64
-step_ms(stuck boards) n=200 median=0.28 p95=0.73 max=0.95

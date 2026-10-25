@@ -1,3 +1,0 @@
-index.pck deployed sha256=4be7de45fa0a427d3c63d1795a7801c1c03306b6b53a33f046a98ce4fa997849
-index.html deployed sha256=73ca94bcf5c4f1f0c916ed05b5bb0203e0d222636f8562e6005cfc80291e2c48
-index.wasm deployed sha256=fe5cebc590758c10bc4469be5a591e28edbde5ec8f458f21baeb83db50d028b9

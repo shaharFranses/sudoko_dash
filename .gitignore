@@ -7,3 +7,9 @@ export/
 secrets*
 *.keystore
 export_credentials.cfg
+
+# generated QA artifacts (kept on disk, not tracked)
+qa/results/
+*.bak
+__pycache__/
+*.pyc

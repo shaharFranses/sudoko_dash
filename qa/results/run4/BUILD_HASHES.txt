@@ -1,9 +1,0 @@
-build/web/index.pck mtime=2026-10-20 14:23:21 IDT size=3581168 sha256=00e435fb335c87c04290656be9da41b125ddb141d3e52595d7f719e3c3118cdf
-build/web/index.wasm mtime=2026-10-20 14:23:21 IDT size=43016933 sha256=20bbe3d6bd8f1197b59335c4263b126ac435e8c8c74fa063227121e27210723a
-build/web/index.js mtime=2026-10-20 14:23:21 IDT size=299462 sha256=b91919adea3cdc44435838efeb052bc0f0390dc8e65cb2a754502f18d98a368c
-build/web/index.html mtime=2026-10-20 14:23:21 IDT size=9780 sha256=ef56ef33c581d47493e88ba227883c8841583a31ee1d6fc4a4b3178aea9670f2
-build/web-release/index.pck mtime=2026-10-20 14:23:26 IDT size=3576800 sha256=95bea8d23d078b3f1aff00c538195ee0b3fed354950db281ad45bc802a4cb3ba
-build/web-release/index.wasm mtime=2026-10-20 14:23:26 IDT size=35376909 sha256=fe5cebc590758c10bc4469be5a591e28edbde5ec8f458f21baeb83db50d028b9
-build/web-release/index.js mtime=2026-10-20 14:23:26 IDT size=331495 sha256=8b649683883a8be172e229a0479503d50cd5245ebf87aa71fda70bf720824075
-build/web-release/index.html mtime=2026-10-20 14:23:26 IDT size=9780 sha256=992311dade4f38d08e7cf9865d5cf2b3ff25a3c28a1ce91f3e821b2b239203b9
-hashes unchanged at end of run

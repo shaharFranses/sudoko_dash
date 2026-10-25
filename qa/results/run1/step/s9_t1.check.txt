@@ -1,2 +1,0 @@
-size 9 tier 1: 30/30 pass
-TOTAL 30/30 PASS

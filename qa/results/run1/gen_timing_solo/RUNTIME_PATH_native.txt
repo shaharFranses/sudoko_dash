@@ -1,3 +1,0 @@
-RUNTIME size=4 tier=1 n=100 median=1.18 p95=1.31 max=3.33 ms sources={ "generated": 100 } fallback_now={ 4: false, 6: false }
-RUNTIME size=6 tier=1 n=100 median=5.84 p95=9.12 max=30.22 ms sources={ "generated": 100 } fallback_now={ 4: false, 6: false }
-RUNTIME size=6 tier=2 n=100 median=0.02 p95=15.12 max=34.55 ms sources={ "generated": 4, "pack": 96 } fallback_now={ 4: false, 6: true }
