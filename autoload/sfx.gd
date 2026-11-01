@@ -12,6 +12,9 @@ const SOUNDS = {
 	"complete": [[523.25, 0.08], [659.25, 0.08], [783.99, 0.08], [1046.5, 0.16]],
 }
 
+## A mute reason turned on or off (only on a real change). main.gd saves the level when "hidden"/"blur" pause the timer.
+signal reason_changed(reason: String, active: bool)
+
 var state = MuteState.new()
 var streams: Dictionary = {}
 var played: Array = []   # last sounds (for tests)
@@ -51,8 +54,10 @@ static func _make(notes: Array) -> AudioStreamWAV:
 	return s
 
 func set_reason(reason: String, active: bool) -> void:
+	var was = state.reasons.has(reason)
 	var m = state.set_reason(reason, active)
 	AudioServer.set_bus_mute(0, m)
+	if was != active: reason_changed.emit(reason, active)
 
 ## Players currently producing sound (tests: nothing plays during the boot intro).
 func playing_count() -> int:

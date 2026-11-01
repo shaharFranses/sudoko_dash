@@ -178,8 +178,12 @@ func test_v11_started_then_finished_on_wall_clock():
 		gut.p("headless visible -> finished: %.2f s" % len_s)
 		assert_between(len_s, 1.85, 2.6, "about 1.93 s of wall clock from the first visible frame, never past the cap (+1 frame)")
 	assert_eq(_calls().count("loadingStop"), 1)
+	# Compare with main.intro_finished_ms (stamped first thing in main's finished handler, before it releases
+	# the SDK hold). The test's own finished lambda runs after main's handler, so under load it could tick
+	# 1 ms after the SDK calls it is meant to bound (QA run 12 race).
+	assert_gt(main.intro_finished_ms, 0)
 	for e in Ads.sdk_log:
-		assert_true(e.t_ms >= times.finished, "SDK call %s only after finished" % e.call)
+		assert_true(e.t_ms >= main.intro_finished_ms, "SDK call %s only after finished" % e.call)
 
 func test_v11_hard_cap_shows_final_frame_and_finishes():
 	await _boot()

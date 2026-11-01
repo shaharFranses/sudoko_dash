@@ -15,6 +15,8 @@ func wait_ready() -> void:
 func loading_stop() -> void:
 	Ads.sdk("loadingStop", "window.SD_CG && window.SD_CG.loadingStop()")
 
+## Web: synchronous localStorage write (stamped; SD_CG picks the newer of localStorage / CrazyGames data on load),
+## so a save from a page-leave handler has landed before unload. Desktop: user://save.json, closed (flushed) here.
 func save(d: Dictionary) -> void:
 	var text = JSON.stringify(d)
 	if OS.has_feature("web"):
@@ -38,6 +40,6 @@ func load_data() -> Dictionary:
 
 func clear() -> void:
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("try{localStorage.removeItem(%s)}catch(e){}" % JSON.stringify(KEY))
+		JavaScriptBridge.eval("try{localStorage.removeItem(%s);localStorage.removeItem(%s)}catch(e){}" % [JSON.stringify(KEY), JSON.stringify(KEY + ".t")])
 	elif FileAccess.file_exists("user://save.json"):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))

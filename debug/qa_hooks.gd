@@ -42,7 +42,7 @@ func _ready() -> void:
 
 func _main(): return _dbg().main
 
-## Mobile/layout QA: jump to a screen ("title", "harbour", "hint", "settings", "results").
+## Mobile/layout QA: jump to a screen ("title", "harbour", "hint", "settings", "results", "resume" = saved grid).
 func show_screen(n: String) -> void:
 	var m = _main()
 	if m == null: return
@@ -52,6 +52,7 @@ func show_screen(n: String) -> void:
 		"hint": if m.screen_name == "grid": m._open_hint_panel()
 		"settings": if m.has_method("show_settings"): m.show_settings()
 		"results": solve_current()
+		"resume": if m.profile.current_grid.has("board"): m.resume_grid()
 
 ## Fill every remaining cell with its solution (through the normal input path) -> results screen.
 func solve_current() -> void:

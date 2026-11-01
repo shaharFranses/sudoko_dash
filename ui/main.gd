@@ -58,6 +58,9 @@ var targets: Array = []           # target cell indices T
 var elapsed_ms: int = 0           # Beat the Tide timer (Reveal penalties included)
 var continues: int = 0
 var _save_accum: float = 0.0
+const SAVE_EVERY_TIMED_S = 0.75    # timed level: fallback save at least every 1 s. 0.75 s leaves room for one late frame, so a plain reload loses < 1000 ms
+const SAVE_EVERY_S = 5.0           # anything else on the grid (unchanged)
+var _page_leave_cb = null          # JavaScriptBridge callback for SD_PAGE.onLeave (kept referenced)
 var objective_label: Label
 var tide_bar: ProgressBar
 var timer_debug_label: Label
@@ -88,6 +91,11 @@ func _ready() -> void:
 	else:
 		intro_finished = true
 	policy = AdPolicy.new(Time.get_ticks_msec())
+	Sfx.reason_changed.connect(_on_mute_reason)
+	if OS.has_feature("web"):
+		_page_leave_cb = JavaScriptBridge.create_callback(func(_args): on_page_leave())
+		var page = JavaScriptBridge.get_interface("SD_PAGE")
+		if page: page.onLeave = _page_leave_cb
 	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
 	if not d.is_empty(): profile.from_dict(d)
@@ -748,9 +756,27 @@ func _process(delta: float) -> void:
 		_refresh_timer()
 	if screen_name == "grid" and board != null:
 		_save_accum += delta
-		if _save_accum >= 5.0:   # periodic save (at least every 5 s)
+		if _save_accum >= save_interval():   # periodic fallback save
 			_save_accum = 0.0
 			save()
+
+## Periodic save interval on the grid: 0.75 s on a timed level (bound < 1 s incl. frame quantisation), 5 s otherwise.
+func save_interval() -> float:
+	return SAVE_EVERY_TIMED_S if (not level.is_empty() and Obj.is_timed(level)) else SAVE_EVERY_S
+
+## The timer pauses on tab hidden / window blur: save the exact elapsed time at that moment.
+func _on_mute_reason(reason: String, active: bool) -> void:
+	if active and (reason == "hidden" or reason == "blur"):
+		_save_running_grid()
+
+## Page is going away (SD_PAGE: visibilitychange hidden, pagehide, beforeunload). Called synchronously from JS.
+func on_page_leave() -> void:
+	_save_running_grid()
+
+func _save_running_grid() -> void:
+	if screen_name == "grid" and board != null:
+		_save_accum = 0.0
+		save()
 
 func _level_done() -> bool:
 	if level.is_empty(): return board.is_complete()
