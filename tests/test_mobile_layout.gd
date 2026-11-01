@@ -360,3 +360,19 @@ func test_only_scroll_container_is_the_harbour_list():
 	main._open_hint_panel()
 	await wait_frames(2)
 	assert_eq(main.root.find_children("*", "ScrollContainer", true, false).size(), 0, "grid + hint panel")
+
+# ---------------- Harbour side panel stays on screen (landscape) ----------------
+func test_harbour_panel_fits_on_screen_landscape():
+	for sz in [Vector2i(1280, 720), Vector2i(1333, 665), Vector2i(1100, 620), Vector2i(1024, 768), Vector2i(844, 390), Vector2i(1920, 1080)]:
+		await _resize(sz)
+		main.profile.current_grid = {"board": {}}   # "Resume grid" row shown too
+		main.show_harbour()
+		await wait_frames(3)
+		var vp = Rect2(Vector2.ZERO, main.get_viewport_rect().size)
+		var sc = main.root.find_child("HarbourScroll", true, false)
+		var r = sc.get_global_rect()
+		assert_true(r.position.x >= 0.0 and r.end.x <= vp.end.x + 0.5, "%s panel inside the screen (%s in %s)" % [sz, r, vp])
+		assert_lt(r.end.x, vp.end.x, "%s panel keeps a gap to the right edge" % sz)
+		for b in sc.find_children("*", "Button", true, false):
+			var br = b.get_global_rect()
+			assert_true(br.end.x <= r.end.x + 0.5 and br.position.x >= r.position.x - 0.5, "%s '%s' inside the panel" % [sz, b.text])
