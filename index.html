@@ -118,15 +118,37 @@ window.SD_CG = (function () {
     },
     status: function (id) { return st[id] || 'none'; },
     gameplay: function (on) { try { if (cg()) { on ? cg().game.gameplayStart() : cg().game.gameplayStop(); } } catch (e) {} },
+    /* Every save is stamped (k + '.t'). localStorage.setItem is synchronous, so a save made from a
+       pagehide / beforeunload / visibilitychange handler has landed before the page goes. On the portal the
+       CrazyGames data module may sync later, so load() takes whichever copy is newer. */
     save: function (k, v) {
-      try { localStorage.setItem(k, v); } catch (e) {}
-      try { if (cg()) cg().data.setItem(k, v); } catch (e) {}
+      var t = String(Date.now());
+      try { localStorage.setItem(k, v); localStorage.setItem(k + '.t', t); } catch (e) {}
+      try { if (cg()) { cg().data.setItem(k, v); cg().data.setItem(k + '.t', t); } } catch (e) {}
     },
     load: function (k) {
-      try { if (cg()) { var v = cg().data.getItem(k); if (v) return v; } } catch (e) {}
-      try { return localStorage.getItem(k); } catch (e) { return null; }
+      var a = null, at = -1, b = null, bt = -1;
+      try { if (cg()) { a = cg().data.getItem(k); at = a ? (parseInt(cg().data.getItem(k + '.t'), 10) || 0) : -1; } } catch (e) {}
+      try { b = localStorage.getItem(k); bt = b ? (parseInt(localStorage.getItem(k + '.t'), 10) || 0) : -1; } catch (e) {}
+      if (at < 0 && bt < 0) return null;
+      return at >= bt ? a : b;
     }
   };
+})();
+</script>
+<script>
+/* Leaving the page (tab hidden, pagehide, beforeunload): call into Godot synchronously so the running
+   level (timer) is saved before the page can be frozen or unloaded. Godot sets SD_PAGE.onLeave at boot. */
+window.SD_PAGE = (function () {
+  var api = { onLeave: null, leaves: 0 };
+  function leave(why) {
+    api.leaves++;
+    try { if (api.onLeave) api.onLeave(why); } catch (e) {}
+  }
+  window.addEventListener('pagehide', function () { leave('pagehide'); }, true);
+  window.addEventListener('beforeunload', function () { leave('beforeunload'); }, true);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) leave('hidden'); }, true);
+  return api;
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -242,7 +264,7 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, t
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5069808,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5070576,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
