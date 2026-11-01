@@ -65,6 +65,9 @@ var objective_label: Label
 var tide_bar: ProgressBar
 var timer_debug_label: Label
 const GRID_MARGIN = 10
+const HARBOUR_EDGE = 12          # landscape Harbour: gap between the side panel and the screen edge
+const HARBOUR_SIDE_MIN = 320.0   # landscape Harbour side panel width range (logical units)
+const HARBOUR_SIDE_MAX = 460.0
 var last_teach: Dictionary = {}   # checker format: {cell,value} | {eliminations} | {flag}
 # ---- mobile / responsive (game/ui_layout.gd) ----
 var compact: bool = false          # portrait one-column layout (set per screen build)
@@ -370,9 +373,17 @@ func show_harbour() -> void:
 	var vp = get_viewport_rect().size
 	var landscape = vp.x >= vp.y
 	var box = HBoxContainer.new() if landscape else VBoxContainer.new()
-	box.set_anchors_preset(PRESET_FULL_RECT)
 	box.add_theme_constant_override("separation", 10)
-	root.add_child(box)
+	if landscape:   # keep the side panel off the screen edge (its buttons were flush with / past the right edge)
+		var outer = MarginContainer.new(); outer.set_anchors_preset(PRESET_FULL_RECT)
+		outer.name = "HarbourOuter"
+		for side_name in ["margin_top", "margin_right", "margin_bottom"]: outer.add_theme_constant_override(side_name, HARBOUR_EDGE)
+		outer.add_theme_constant_override("margin_left", 0)
+		root.add_child(outer)
+		outer.add_child(box)
+	else:
+		box.set_anchors_preset(PRESET_FULL_RECT)
+		root.add_child(box)
 	var hv = HarbourView.new(); hv.profile = profile
 	hv.name = "HarbourView"
 	hv.reveal_id = _just_restored   # gentle fade-in of a task restored this visit
@@ -381,7 +392,10 @@ func show_harbour() -> void:
 	hv.custom_minimum_size = Vector2(300, 220)
 	box.add_child(hv)
 	var av = avail_size()
-	var sc = TouchScroll.new(); sc.custom_minimum_size = Vector2(460 if landscape else av.x, 0 if landscape else av.y * 0.55)
+	# Landscape: the list takes at most ~36% of the width (never the fixed 460 that pushed it off narrow screens).
+	var side_w = clampf(av.x * 0.36, HARBOUR_SIDE_MIN, HARBOUR_SIDE_MAX)
+	var sc = TouchScroll.new(); sc.custom_minimum_size = Vector2(side_w if landscape else av.x, 0 if landscape else av.y * 0.55)
+	sc.clip_contents = true
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.name = "HarbourScroll"
 	sc.drag_enabled = _touch   # desktop mouse behaviour unchanged
@@ -391,23 +405,25 @@ func show_harbour() -> void:
 	box.add_child(sc)
 	var v = VBoxContainer.new(); v.size_flags_horizontal = SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 8)
-	if compact:   # side margins so buttons don't touch the screen edge
-		var hm = MarginContainer.new(); hm.size_flags_horizontal = SIZE_EXPAND_FILL
-		for side_name in ["margin_left", "margin_right", "margin_bottom"]: hm.add_theme_constant_override(side_name, _u(GRID_MARGIN))
-		sc.add_child(hm)
-		hm.add_child(v)
-	else:
-		sc.add_child(v)
+	# Side margins so buttons don't touch the panel / screen edge (both layouts).
+	var hm = MarginContainer.new(); hm.size_flags_horizontal = SIZE_EXPAND_FILL
+	for side_name in ["margin_left", "margin_right", "margin_bottom"]: hm.add_theme_constant_override(side_name, _u(GRID_MARGIN) if compact else 12)
+	sc.add_child(hm)
+	hm.add_child(v)
 	v.add_child(_heading("Harbour", 34))
-	var pills = HBoxContainer.new(); pills.alignment = BoxContainer.ALIGNMENT_CENTER
-	pills.add_theme_constant_override("separation", _u(6))
+	var pills = HFlowContainer.new(); pills.alignment = FlowContainer.ALIGNMENT_CENTER   # wraps on a narrow panel
+	pills.name = "HarbourPills"
+	pills.add_theme_constant_override("h_separation", _u(16))
+	pills.add_theme_constant_override("v_separation", _u(4))
 	var ipx = _u(28)
 	for it in [["star", "gold", "Stars %d" % profile.stars], ["coin", "gold", "Coins %d" % profile.coins], ["hint", "ink", "Tokens %d" % profile.tokens]]:
-		pills.add_child(_icon_rect(it[0], it[1], ipx))
+		var pill = HBoxContainer.new()   # icon + label stay together when the row wraps
+		pill.add_theme_constant_override("separation", _u(6))
+		pill.add_child(_icon_rect(it[0], it[1], ipx))
 		var pl = _label(it[2], 22); pl.autowrap_mode = TextServer.AUTOWRAP_OFF
 		pl.add_theme_font_override("font", load(AP.FONT_UI_BOLD))
-		pills.add_child(pl)
-		if it[0] != "hint": pills.add_child(_spacer(_u(10)))
+		pill.add_child(pl)
+		pills.add_child(pill)
 	v.add_child(pills)
 	if profile.current_grid.has("board"):
 		v.add_child(_btn("Resume grid", resume_grid, 28, 72))
@@ -456,10 +472,15 @@ func show_harbour() -> void:
 	var stb = _style(_btn("Settings", func(): show_settings("harbour"), 22, 56), "ButtonChip", "settings")
 	stb.name = "SettingsButton"
 	v.add_child(stb)
+	_shrinkable_buttons(v)
 
-func _spacer(w: float) -> Control:
-	var c = Control.new(); c.custom_minimum_size = Vector2(w, 0)
-	return c
+## Full-width Harbour list buttons wrap long text instead of forcing the panel wider than the screen
+## (row buttons such as "Buy (4 stars)" keep their natural width).
+func _shrinkable_buttons(n: Node) -> void:
+	for b in n.get_children():
+		if not b is Button: continue
+		if "autowrap_mode" in b: b.set("autowrap_mode", TextServer.AUTOWRAP_WORD_SMART)
+		else: b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 func _buy_task(id: String) -> void:
 	if profile.buy_task(id):
