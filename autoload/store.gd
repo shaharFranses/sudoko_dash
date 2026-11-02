@@ -15,31 +15,75 @@ func wait_ready() -> void:
 func loading_stop() -> void:
 	Ads.sdk("loadingStop", "window.SD_CG && window.SD_CG.loadingStop()")
 
-## Web: synchronous localStorage write (stamped; SD_CG picks the newer of localStorage / CrazyGames data on load),
-## so a save from a page-leave handler has landed before unload. Desktop: user://save.json, closed (flushed) here.
-func save(d: Dictionary) -> void:
-	var text = JSON.stringify(d)
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.SD_CG ? window.SD_CG.save(%s, %s) : localStorage.setItem(%s, %s)" % [JSON.stringify(KEY), JSON.stringify(text), JSON.stringify(KEY), JSON.stringify(text)])
-	else:
-		var f = FileAccess.open("user://save.json", FileAccess.WRITE)
-		if f:
-			f.store_string(text)
-			f.close()
+## Save slots. NEVER rename KEY: every player's progress lives under it, across all deployed versions.
+## BACKUP_KEY holds the last save that loaded cleanly (written once per boot), used if the main slot is
+## ever unreadable. A save from an older format is also copied to KEY + ".pre_v<N>" before migrating.
+const BACKUP_KEY = KEY + ".bak"
+var load_source: String = ""   # "main" | "backup" | "" (fresh): QA / debug
 
+## Web: synchronous localStorage write (stamped; SD_CG picks the newer of localStorage / CrazyGames data on load),
+## so a save from a page-leave handler has landed before unload. Desktop: user://save.json, written to a temp
+## file then renamed over the old one, so a crash mid-write never leaves a half-written save.
+func save(d: Dictionary) -> void:
+	_write(KEY, JSON.stringify(d))
+
+## Main slot first; if it is missing or unreadable, the backup. The unreadable text is kept under
+## KEY + ".corrupt" (not overwritten silently) so it can be recovered by hand.
 func load_data() -> Dictionary:
-	var text = ""
+	var text = _read(KEY)
+	var d = _parse(text)
+	if not d.is_empty():
+		load_source = "main"
+		return d
+	if text != "":
+		push_warning("[SD] save unreadable, trying backup")
+		_write(KEY + ".corrupt", text)
+	d = _parse(_read(BACKUP_KEY))
+	load_source = "backup" if not d.is_empty() else ""
+	return d
+
+## Last known good copy (called after a successful load + migration).
+func backup(d: Dictionary) -> void:
+	_write(BACKUP_KEY, JSON.stringify(d))
+
+## Untouched copy of an old-format save, before the migration rewrites it.
+func keep_copy(suffix: String, d: Dictionary) -> void:
+	var k = KEY + "." + suffix
+	if _read(k) == "": _write(k, JSON.stringify(d))
+
+func clear() -> void:
+	load_source = ""
 	if OS.has_feature("web"):
-		var v = JavaScriptBridge.eval("(window.SD_CG ? window.SD_CG.load(%s) : localStorage.getItem(%s)) || ''" % [JSON.stringify(KEY), JSON.stringify(KEY)])
-		text = str(v) if v != null else ""
-	elif FileAccess.file_exists("user://save.json"):
-		text = FileAccess.get_file_as_string("user://save.json")
+		JavaScriptBridge.eval("try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf(%s)===0)localStorage.removeItem(k)}}catch(e){}" % JSON.stringify(KEY))
+	else:
+		var dir = DirAccess.open("user://")
+		if dir:
+			for f in dir.get_files():
+				if f.begins_with("save") and f.ends_with(".json"): dir.remove(f)
+
+static func _parse(text: String) -> Dictionary:
 	if text == "": return {}
 	var d = JSON.parse_string(text)
 	return d if d is Dictionary else {}
 
-func clear() -> void:
+static func _file(k: String) -> String:
+	return "user://save.json" if k == KEY else "user://save%s.json" % k.substr(KEY.length())
+
+func _write(k: String, text: String) -> void:
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("try{localStorage.removeItem(%s);localStorage.removeItem(%s)}catch(e){}" % [JSON.stringify(KEY), JSON.stringify(KEY + ".t")])
-	elif FileAccess.file_exists("user://save.json"):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))
+		JavaScriptBridge.eval("window.SD_CG ? window.SD_CG.save(%s, %s) : localStorage.setItem(%s, %s)" % [JSON.stringify(k), JSON.stringify(text), JSON.stringify(k), JSON.stringify(text)])
+		return
+	var path = _file(k)
+	var tmp = path + ".tmp"
+	var f = FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null: return
+	f.store_string(text)
+	f.close()
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path))
+
+func _read(k: String) -> String:
+	if OS.has_feature("web"):
+		var v = JavaScriptBridge.eval("(window.SD_CG ? window.SD_CG.load(%s) : localStorage.getItem(%s)) || ''" % [JSON.stringify(k), JSON.stringify(k)])
+		return str(v) if v != null else ""
+	var path = _file(k)
+	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else ""

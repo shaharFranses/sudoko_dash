@@ -101,7 +101,13 @@ func _ready() -> void:
 		if page: page.onLeave = _page_leave_cb
 	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
-	if not d.is_empty(): profile.from_dict(d)
+	if not d.is_empty():
+		var v = int(d.get("v", 1))
+		if v < Profile.SAVE_VERSION: Store.keep_copy("pre_v%d" % v, d)   # untouched copy before migrating
+		profile.from_dict(d)
+		save()                           # migrated / cleaned save written back under the same key
+		Store.backup(profile.to_dict())  # last known good copy for this boot
+	print("[SD] save loaded from %s (v%d)" % [Store.load_source if Store.load_source != "" else "none (new player)", profile.save_version_loaded])
 	Sfx.set_reason("user", not profile.sound_on)
 	_touch = DisplayServer.is_touchscreen_available()
 	theme = ART_THEME   # art kit v1: fonts, button/panel styles and colours for every screen
