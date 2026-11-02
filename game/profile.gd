@@ -34,6 +34,7 @@ var classic_index: Dictionary = {}  # tier -> next pack index
 var quick_seed: int = 0
 var classic_tier: int = 1
 var sound_on: bool = true   # Settings > Sound (mute reason "user")
+var story_seen: bool = false   # first Play shows the story intro once (replay from the title)
 
 func grant_tokens(n: int) -> int:
 	var before = tokens
@@ -138,7 +139,7 @@ func to_dict() -> Dictionary:
 	return {"v": 1, "coins": coins, "tokens": tokens, "stars": stars, "stars_earned": stars_earned,
 		"path_v": PATH_VERSION, "path_next": path_next, "path_stars": path_stars, "level_best": level_best, "migrated_from_v1": migrated_from_v1, "tasks": tasks, "decor": decor,
 		"sc_times": sc_times, "sc_lock_until": sc_lock_until, "current_grid": current_grid,
-		"classic_index": classic_index, "quick_seed": quick_seed, "classic_tier": classic_tier, "sound_on": sound_on}
+		"classic_index": classic_index, "quick_seed": quick_seed, "classic_tier": classic_tier, "sound_on": sound_on, "story_seen": story_seen}
 
 func from_dict(d: Dictionary) -> void:
 	coins = int(d.get("coins", 100)); tokens = int(d.get("tokens", 3))
@@ -165,6 +166,8 @@ func from_dict(d: Dictionary) -> void:
 		current_grid = {}   # an old 15-grid path grid in progress can't map to a level
 	classic_tier = clampi(int(d.get("classic_tier", 1)), 1, 4)
 	sound_on = bool(d.get("sound_on", true))
+	# Saves from before the story intro: a player with any progress has already met the Harbour.
+	story_seen = bool(d.get("story_seen", stars_earned > 0 or path_next > 0 or not tasks.is_empty()))
 
 ## Old 15-grid path -> 20-level path. Earned stars, coins, tokens and bought tasks are kept as-is
 ## (no double award); progress maps proportionally (n/15 -> floor(n*20/15)); those levels count as
