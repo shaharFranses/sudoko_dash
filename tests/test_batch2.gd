@@ -42,9 +42,9 @@ func test_b1_undo_in_ui_keeps_mistake_count_and_label():
 	assert_eq(main.mistakes_label.text, "Mistakes 1/3")
 
 func test_b2_classic_tier_persists_across_reload():
-	main.show_harbour()
-	for btn in main.root.find_children("*", "Button", true, false):
-		if btn.text == "T3": btn.pressed.emit(); break
+	main.show_classic_menu()
+	(main.root.find_child("Classic3", true, false) as Button).pressed.emit()   # "Hard"
+	await wait_frames(1)
 	assert_eq(main.classic_tier, 3)
 	var m2 = load("res://scenes/main.tscn").instantiate()
 	m2.play_intro = false   # PKD intro covered by test_pkd_intro.gd
