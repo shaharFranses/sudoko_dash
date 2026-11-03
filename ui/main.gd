@@ -101,7 +101,13 @@ func _ready() -> void:
 		if page: page.onLeave = _page_leave_cb
 	await Store.wait_ready()   # don't read the save until the CrazyGames SDK init has settled
 	var d = Store.load_data()
-	if not d.is_empty(): profile.from_dict(d)
+	if not d.is_empty():
+		var v = int(d.get("v", 1))
+		if v < Profile.SAVE_VERSION: Store.keep_copy("pre_v%d" % v, d)   # untouched copy before migrating
+		profile.from_dict(d)
+		save()                           # migrated / cleaned save written back under the same key
+		Store.backup(profile.to_dict())  # last known good copy for this boot
+	print("[SD] save loaded from %s (v%d)" % [Store.load_source if Store.load_source != "" else "none (new player)", profile.save_version_loaded])
 	Sfx.set_reason("user", not profile.sound_on)
 	_touch = DisplayServer.is_touchscreen_available()
 	theme = ART_THEME   # art kit v1: fonts, button/panel styles and colours for every screen
@@ -126,7 +132,7 @@ func _clear() -> void:
 	var vp = get_viewport_rect().size
 	compact = UiLayout.is_compact(vp)
 	if backdrop:   # menus sit on the village scene (cover-cropped, picked by aspect); grid + harbour on linen
-		backdrop.visible = screen_name in ["title", "settings", "results", "restored"]
+		backdrop.visible = screen_name in ["title", "settings", "results", "restored", "story", "classic"]
 		backdrop.texture = BG_PORTRAIT if vp.y > vp.x * 1.2 else BG_LANDSCAPE
 	for c in root.get_children():
 		root.remove_child(c)
@@ -188,6 +194,8 @@ func _relayout() -> void:
 		"results": _build_results()
 		"restored": show_area_restored()
 		"settings": show_settings()
+		"story": show_story(story_page)
+		"classic": show_classic_menu()
 
 ## Layout facts for QA hooks / tests.
 func layout_info() -> Dictionary:
@@ -335,12 +343,69 @@ func _build_title() -> void:
 	var v = _center_box()
 	v.add_child(_heading("Sudoku Dash", 56, true))
 	v.add_child(_label("Restore the Harbour, one puzzle at a time.", 24))
-	var play = _btn("Play", show_harbour, 34, 80)
+	var play = _btn("Play", _on_play, 34, 80)
 	play.name = "PlayButton"
 	v.add_child(play)
+	var story = _style(_btn("Story", func(): show_story(0), 24, 56), "ButtonChip")
+	story.name = "StoryButton"
+	v.add_child(story)
 	var st = _style(_btn("Settings", func(): show_settings("title"), 24, 56), "ButtonChip", "settings")
 	st.name = "SettingsButton"
 	v.add_child(st)
+
+## Play: a new player meets the story first; everyone else goes straight to the Harbour.
+func _on_play() -> void:
+	if profile.story_seen: show_harbour()
+	else: show_story(0)
+
+# ---------------- story intro ----------------
+## Story pages: [heading, body, task sprite id, restored?]. Shown once on the first Play, replayable from the title.
+const STORY = [
+	["The quiet harbour", "Winter storms swept through the little harbour village. The dock is broken, the boats have faded and the lighthouse has gone dark.", "dock", false],
+	["Puzzles light the way", "Every Sudoku you solve earns stars. Spend them to fix the dock, paint the boats, plant flowers and relight the lighthouse.", "lighthouse", false],
+	["Bring it back to life", "The villagers are counting on you. One puzzle at a time, the harbour will bustle again.", "lighthouse", true],
+]
+var story_page: int = 0
+
+func show_story(page: int = 0) -> void:
+	story_page = clampi(page, 0, STORY.size() - 1)
+	screen_name = "story"
+	Ads.set_context("menu")
+	_clear()
+	var pg = STORY[story_page]
+	var v = _center_box()
+	v.name = "StoryPanel"
+	var art = TextureRect.new()
+	art.texture = load(AP.task_sprite_path(pg[2], pg[3]))
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var vp = get_viewport_rect().size
+	art.custom_minimum_size = Vector2(0, clampf(vp.y * 0.26, _u(110), _u(220)))
+	art.modulate.a = 0.0
+	v.add_child(art)
+	create_tween().tween_property(art, "modulate:a", 1.0, 0.35)
+	v.add_child(_heading(pg[0], 40, true))
+	var body = _label(pg[1], 24)
+	body.name = "StoryText"
+	v.add_child(body)
+	v.add_child(_label("%d / %d" % [story_page + 1, STORY.size()], 18, AP.DIGIT_NOTES))
+	var last = story_page == STORY.size() - 1
+	var next = _btn("Let's go!" if last else "Next", _story_next, 30, 72)
+	next.name = "StoryNext"
+	v.add_child(next)
+	if not last:
+		var skip = _style(_btn("Skip", _story_done, 22, 56), "ButtonChip")
+		skip.name = "StorySkip"
+		v.add_child(skip)
+
+func _story_next() -> void:
+	if story_page < STORY.size() - 1: show_story(story_page + 1)
+	else: _story_done()
+
+func _story_done() -> void:
+	if not profile.story_seen:
+		profile.story_seen = true
+		save()
+	show_harbour()
 
 # ---------------- settings ----------------
 func show_settings(back: String = "") -> void:
@@ -433,14 +498,9 @@ func show_harbour() -> void:
 	else:
 		v.add_child(_label("Path complete! Stars earned: %d" % profile.stars_earned, 22))
 	v.add_child(_btn("Quick 6x6", start_quick, 24))
-	var tiers = HBoxContainer.new()
-	for t in [1, 2, 3, 4]:
-		var b = _style(_btn("T%d" % t, func(): classic_tier = t; save(); show_harbour(), 22, 56), "ButtonChip")
-		b.toggle_mode = true; b.button_pressed = t == classic_tier
-		b.size_flags_horizontal = SIZE_EXPAND_FILL
-		tiers.add_child(b)
-	v.add_child(tiers)
-	v.add_child(_btn("Classic 9x9 (tier %d)" % classic_tier, start_classic, 24))
+	var cb = _btn("Classic 9x9", show_classic_menu, 24)
+	cb.name = "ClassicButton"
+	v.add_child(cb)
 	v.add_child(_heading("Tasks", 28))
 	for t in Profile.TASKS:
 		var row = HBoxContainer.new()
@@ -498,6 +558,26 @@ func show_area_restored() -> void:
 	v.add_child(_heading("Area restored!", 48, true))
 	v.add_child(_label("The Harbour is bustling again. Extra stars carry over to the next area.", 24))
 	v.add_child(_btn("Back to Harbour", show_harbour))
+
+## Classic 9x9 difficulty picker (tiers 1-4). The last pick is remembered and highlighted.
+const CLASSIC_NAMES = ["Easy", "Medium", "Hard", "Expert"]
+
+func show_classic_menu() -> void:
+	screen_name = "classic"
+	Ads.set_context("menu")
+	_clear()
+	var v = _center_box()
+	v.name = "ClassicMenu"
+	v.add_child(_heading("Classic 9x9", 44))
+	v.add_child(_label("Pick a difficulty", 22))
+	for t in [1, 2, 3, 4]:
+		var b = _btn(CLASSIC_NAMES[t - 1], func(): classic_tier = t; save(); start_classic(), 26, 64)
+		b.name = "Classic%d" % t
+		if t != classic_tier: _style(b, "ButtonSecondary")
+		v.add_child(b)
+	var bb = _style(_btn("Back", show_harbour, 22, 56), "ButtonChip", "back")
+	bb.name = "ClassicBack"
+	v.add_child(bb)
 
 # ---------------- grids ----------------
 func start_path_grid() -> void:
@@ -650,7 +730,7 @@ func _build_grid_screen() -> void:
 
 func _grid_title() -> String:
 	if grid_meta.mode == "path": return "Level %d/%d" % [grid_meta.path_index + 1, Profile.path_length()]
-	return "Quick 6x6" if grid_meta.mode == "quick" else "Classic 9x9 T%d" % grid_meta.tier
+	return "Quick 6x6" if grid_meta.mode == "quick" else "Classic %s" % CLASSIC_NAMES[clampi(grid_meta.tier, 1, 4) - 1]
 
 func _make_grid_view(sel: int) -> void:
 	grid_view = GridView.new()

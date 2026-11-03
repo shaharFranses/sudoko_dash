@@ -42,9 +42,9 @@ func test_b1_undo_in_ui_keeps_mistake_count_and_label():
 	assert_eq(main.mistakes_label.text, "Mistakes 1/3")
 
 func test_b2_classic_tier_persists_across_reload():
-	main.show_harbour()
-	for btn in main.root.find_children("*", "Button", true, false):
-		if btn.text == "T3": btn.pressed.emit(); break
+	main.show_classic_menu()
+	(main.root.find_child("Classic3", true, false) as Button).pressed.emit()   # "Hard"
+	await wait_frames(1)
 	assert_eq(main.classic_tier, 3)
 	var m2 = load("res://scenes/main.tscn").instantiate()
 	m2.play_intro = false   # PKD intro covered by test_pkd_intro.gd
@@ -52,11 +52,13 @@ func test_b2_classic_tier_persists_across_reload():
 	await wait_frames(2)
 	assert_eq(m2.classic_tier, 3)
 	m2.show_harbour()
-	var found = false
 	for btn in m2.root.find_children("*", "Button", true, false):
-		if btn.text == "T3": assert_true(btn.button_pressed); found = true
-		if btn.text.begins_with("Classic 9x9"): assert_eq(btn.text, "Classic 9x9 (tier 3)")
-	assert_true(found)
+		assert_false(btn.text in ["T1", "T2", "T3", "T4"], "no tier chips on the Harbour")
+	m2.show_classic_menu()
+	var hard: Button = m2.root.find_child("Classic3", true, false)
+	assert_not_null(hard)
+	assert_eq(hard.theme_type_variation, "", "last picked difficulty is highlighted")
+	assert_eq((m2.root.find_child("Classic1", true, false) as Button).theme_type_variation, "ButtonSecondary")
 
 func _finish_grid():
 	main.start_path_grid()

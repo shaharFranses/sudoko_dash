@@ -50,6 +50,20 @@ const C_SEL = AP.HL_SELECTED
 const C_TEACH = Color("D9EBCB")   # soft sage: teach step (distinct from the butter selection)
 const C_FLAG = AP.ERROR_CELL
 const C_NOTES = AP.DIGIT_NOTES
+const C_BOX_ALT = Color("EDE1CB")   # warm sand tint on alternate boxes (4x4 / 6x6), apart from the cool peer highlight
+
+## 4x4 / 6x6: boxes alternate paper / sand in a checkerboard so each box reads at a glance
+## (6x6 boxes are 2x3 rectangles, easy to misread with lines alone). 9x9 keeps the classic plain paper.
+static func box_shaded(shape, i: int) -> bool:
+	if shape.size == 9: return false
+	var br = shape.row(i) / shape.box_h
+	var bc = shape.col(i) / shape.box_w
+	return (br + bc) % 2 == 1
+
+## Box line width: heavier on the small grids where boxes are rectangles / few cells.
+func box_line_w() -> float:
+	if board == null: return 3.0
+	return clampf(cell_px() * (0.075 if board.size < 9 else 0.05), 3.0, 6.0)
 const FONT_GIVEN = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Bold.ttf")
 const FONT_ENTRY = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Medium.ttf")
 const FONT_NOTES = preload("res://assets/art/fonts/AtkinsonHyperlegibleNext-Regular.ttf")
@@ -95,6 +109,7 @@ func _draw() -> void:
 	for i in n * n:
 		var r = Rect2(o + Vector2(i % n, i / n) * cp, Vector2(cp, cp))
 		var col = Color(0, 0, 0, 0)
+		if box_shaded(board.shape, i): col = C_BOX_ALT
 		if selected >= 0:
 			if board.shape.row(i) == board.shape.row(selected) or board.shape.col(i) == board.shape.col(selected) or board.shape.box(i) == board.shape.box(selected):
 				col = C_HL
@@ -154,8 +169,11 @@ func _draw() -> void:
 		if c in lantern_path: continue
 		var rr = Rect2(o + Vector2(c % n, c / n) * cp, Vector2(cp, cp)).grow(-3)
 		draw_rect(rr, AP.ACCENT_TERRACOTTA if board.cells[c] != board.solution[c] else Color("4F7D45"), false, 2.5)
+	# thin cell lines first, then box lines on top (a thin line never cuts through a box border)
 	for k in range(n + 1):
-		var thick_v = k % board.shape.box_w == 0
-		var thick_h = k % board.shape.box_h == 0
-		draw_line(o + Vector2(k * cp, 0), o + Vector2(k * cp, n * cp), C_THICK if thick_v else C_LINE, 3.0 if thick_v else 1.5)
-		draw_line(o + Vector2(0, k * cp), o + Vector2(n * cp, k * cp), C_THICK if thick_h else C_LINE, 3.0 if thick_h else 1.5)
+		if k % board.shape.box_w != 0: draw_line(o + Vector2(k * cp, 0), o + Vector2(k * cp, n * cp), C_LINE, 1.5)
+		if k % board.shape.box_h != 0: draw_line(o + Vector2(0, k * cp), o + Vector2(n * cp, k * cp), C_LINE, 1.5)
+	var bw = box_line_w()
+	for k in range(n + 1):
+		if k % board.shape.box_w == 0: draw_line(o + Vector2(k * cp, -bw / 2.0), o + Vector2(k * cp, n * cp + bw / 2.0), C_THICK, bw)
+		if k % board.shape.box_h == 0: draw_line(o + Vector2(-bw / 2.0, k * cp), o + Vector2(n * cp + bw / 2.0, k * cp), C_THICK, bw)
