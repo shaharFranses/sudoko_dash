@@ -1,0 +1,86 @@
+# Production: only a version tag ships (git tag v1.3.0 && git push origin v1.3.0).
+#   tests -> release web build (no QA hooks) ->
+#   1) GitHub Release with sudoku-dash-<tag>-web.zip (index.html at the zip root, ready for CrazyGames upload)
+#   2) the live site root on gh-pages (staging/ folder kept)
+# To require a manual approval before going live, add required reviewers to the "production"
+# environment (repo Settings > Environments).
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)release, e.g. v1.3.0 (rollback = re-run with an older tag)
+        required: true
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    container: barichello/godot-ci:4.3
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Export templates into $HOME
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          if [ ! -d "$HOME/.local/share/godot/export_templates/4.3.stable" ]; then
+            mv /root/.local/share/godot/export_templates/4.3.stable "$HOME/.local/share/godot/export_templates/"
+          fi
+      - name: Import project
+        run: timeout 600 godot --headless --editor --quit --path . || true
+      - name: Export Web Release
+        shell: bash
+        run: |
+          mkdir -p build/web-release
+          godot --headless --path . --export-release "Web Release" build/web-release/index.html
+          test -s build/web-release/index.pck && test -s build/web-release/index.wasm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-release
+          path: build/web-release
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment:
+      name: production
+      url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-release
+          path: site
+      - name: Zip for CrazyGames
+        run: cd site && zip -r "../sudoku-dash-${TAG}-web.zip" . && cd .. && ls -l *.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: sudoku-dash-${{ env.TAG }}-web.zip
+          generate_release_notes: true
+      - name: Live site
+        run: touch site/.nojekyll
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
+          keep_files: true   # keeps staging/ (root files always have the same names, so they are replaced)
+          commit_message: "Deploy release ${{ env.TAG }}"

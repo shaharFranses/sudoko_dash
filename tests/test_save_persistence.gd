@@ -35,7 +35,7 @@ func test_v1_save_migrates_and_keeps_copy():
 	assert_eq(m.profile.path_next, 3)
 	assert_true(m.profile.story_seen, "existing player skips the story")
 	assert_eq(int(Store.load_data().v), Profile.SAVE_VERSION, "written back in the new format")
-	assert_eq(int(Store._parse(Store._read(Store.KEY + ".pre_v1")).coins), 55, "untouched pre-migration copy")
+	assert_eq(int(Store._parse(Store._read(Store.slot + ".pre_v1")).coins), 55, "untouched pre-migration copy")
 
 func test_newer_build_keys_are_kept():
 	var p = Profile.new()
@@ -85,8 +85,8 @@ func test_unreadable_save_falls_back_to_backup():
 	m.save()
 	var m2 = await _boot()   # boot writes the backup
 	assert_eq(m2.profile.coins, 777)
-	Store._write(Store.KEY, "{not json")
+	Store._write(Store.slot, "{not json")
 	var m3 = await _boot()
 	assert_eq(Store.load_source, "backup")
 	assert_eq(m3.profile.coins, 777, "progress recovered from the backup")
-	assert_eq(Store._read(Store.KEY + ".corrupt"), "{not json", "unreadable save kept, not lost")
+	assert_eq(Store._read(Store.slot + ".corrupt"), "{not json", "unreadable save kept, not lost")

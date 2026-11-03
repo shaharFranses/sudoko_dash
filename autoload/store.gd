@@ -16,45 +16,53 @@ func loading_stop() -> void:
 	Ads.sdk("loadingStop", "window.SD_CG && window.SD_CG.loadingStop()")
 
 ## Save slots. NEVER rename KEY: every player's progress lives under it, across all deployed versions.
-## BACKUP_KEY holds the last save that loaded cleanly (written once per boot), used if the main slot is
+## slot + ".bak" holds the last save that loaded cleanly (written once per boot), used if the main slot is
 ## ever unreadable. A save from an older format is also copied to KEY + ".pre_v<N>" before migrating.
-const BACKUP_KEY = KEY + ".bak"
+var slot: String = KEY         # the key actually used: KEY, or KEY + "_staging" on the staging site
 var load_source: String = ""   # "main" | "backup" | "" (fresh): QA / debug
+
+## Staging (…/staging/ on the same github.io domain as the live build) gets its own save slot, so
+## playtesting never touches a real player's progress.
+func _ready() -> void:
+	if OS.has_feature("web"):
+		var path = str(JavaScriptBridge.eval("location.pathname || ''"))
+		if path.find("/staging") >= 0: slot = KEY + "_staging"
+	print("[SD] save slot ", slot)
 
 ## Web: synchronous localStorage write (stamped; SD_CG picks the newer of localStorage / CrazyGames data on load),
 ## so a save from a page-leave handler has landed before unload. Desktop: user://save.json, written to a temp
 ## file then renamed over the old one, so a crash mid-write never leaves a half-written save.
 func save(d: Dictionary) -> void:
-	_write(KEY, JSON.stringify(d))
+	_write(slot, JSON.stringify(d))
 
 ## Main slot first; if it is missing or unreadable, the backup. The unreadable text is kept under
-## KEY + ".corrupt" (not overwritten silently) so it can be recovered by hand.
+## slot + ".corrupt" (not overwritten silently) so it can be recovered by hand.
 func load_data() -> Dictionary:
-	var text = _read(KEY)
+	var text = _read(slot)
 	var d = _parse(text)
 	if not d.is_empty():
 		load_source = "main"
 		return d
 	if text != "":
 		push_warning("[SD] save unreadable, trying backup")
-		_write(KEY + ".corrupt", text)
-	d = _parse(_read(BACKUP_KEY))
+		_write(slot + ".corrupt", text)
+	d = _parse(_read(slot + ".bak"))
 	load_source = "backup" if not d.is_empty() else ""
 	return d
 
 ## Last known good copy (called after a successful load + migration).
 func backup(d: Dictionary) -> void:
-	_write(BACKUP_KEY, JSON.stringify(d))
+	_write(slot + ".bak", JSON.stringify(d))
 
 ## Untouched copy of an old-format save, before the migration rewrites it.
 func keep_copy(suffix: String, d: Dictionary) -> void:
-	var k = KEY + "." + suffix
+	var k = slot + "." + suffix
 	if _read(k) == "": _write(k, JSON.stringify(d))
 
 func clear() -> void:
 	load_source = ""
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf(%s)===0)localStorage.removeItem(k)}}catch(e){}" % JSON.stringify(KEY))
+		JavaScriptBridge.eval("try{var s=%s;for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k===s||(k&&k.indexOf(s+'.')===0))localStorage.removeItem(k)}}catch(e){}" % JSON.stringify(slot))
 	else:
 		var dir = DirAccess.open("user://")
 		if dir:

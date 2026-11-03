@@ -1,0 +1,67 @@
+# Staging / playtest: every push to dev -> tests -> debug web build (QA hooks on) ->
+#   https://<owner>.github.io/sudoko_dash/staging/
+# The live build at the site root is never touched here (only the staging/ folder of gh-pages is replaced).
+# Staging uses its own save slot (Store.slot), so playtesting never touches real player saves.
+name: Staging
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    container: barichello/godot-ci:4.3
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export templates into $HOME
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          if [ ! -d "$HOME/.local/share/godot/export_templates/4.3.stable" ]; then
+            mv /root/.local/share/godot/export_templates/4.3.stable "$HOME/.local/share/godot/export_templates/"
+          fi
+      - name: Import project
+        run: timeout 600 godot --headless --editor --quit --path . || true
+      - name: Export Web (debug)
+        shell: bash
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-debug "Web" build/web/index.html
+          test -s build/web/index.pck && test -s build/web/index.wasm
+          echo "${GITHUB_SHA}" > build/web/build.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-staging
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment:
+      name: staging
+      url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/staging/
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-staging
+          path: site
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
+          destination_dir: staging
+          commit_message: "Deploy staging ${{ github.sha }}"
