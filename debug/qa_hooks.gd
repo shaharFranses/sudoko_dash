@@ -126,6 +126,7 @@ func state() -> Dictionary:
 	if m:
 		d["genLog"] = m.source.log
 		d["profile"] = m.profile.to_dict()
+		d["saveLoad"] = {"source": Store.last_load.get("source", ""), "seq": Store.last_load.get("seq", -2), "legacy": Store.last_load.get("legacy", false), "hold_fresh": Store.last_load.get("hold_fresh", false), "writes": Store.writes, "refused": Store.refused.slice(-5)}
 		d["grid"] = m.board.to_dict() if m.board else null
 		d["screen"] = m.screen_name
 		d["midgame"] = {"counter": m.policy.counter, "sessionAgeMs": Time.get_ticks_msec() - m.policy.session_start_ms}

@@ -38,20 +38,22 @@ window.SD_CG = (function () {
     },
     status: function (id) { return st[id] || 'none'; },
     gameplay: function (on) { try { if (cg()) { on ? cg().game.gameplayStart() : cg().game.gameplayStop(); } } catch (e) {} },
-    /* Every save is stamped (k + '.t'). localStorage.setItem is synchronous, so a save made from a
-       pagehide / beforeunload / visibilitychange handler has landed before the page goes. On the portal the
-       CrazyGames data module may sync later, so load() takes whichever copy is newer. */
-    save: function (k, v) {
-      var t = String(Date.now());
-      try { localStorage.setItem(k, v); localStorage.setItem(k + '.t', t); } catch (e) {}
-      try { if (cg()) { cg().data.setItem(k, v); cg().data.setItem(k + '.t', t); } } catch (e) {}
+    /* Raw storage for Store (autoload/store.gd), which owns the save format: ONE atomic record per copy (JSON
+       envelope {v, seq, saved_at, profile}), validation and the local/cloud choice. localStorage.setItem is
+       synchronous, so a save made from a pagehide / beforeunload / visibilitychange handler has landed before
+       the page goes. 'cloud' = CrazyGames data module (portal only). */
+    hasCloud: function () { return !!cg(); },
+    get: function (src, k) {
+      try { if (src === 'cloud') { if (!cg()) return null; var c = cg().data.getItem(k); return c == null ? null : String(c); } } catch (e) { return null; }
+      try { return localStorage.getItem(k); } catch (e) { return null; }
     },
-    load: function (k) {
-      var a = null, at = -1, b = null, bt = -1;
-      try { if (cg()) { a = cg().data.getItem(k); at = a ? (parseInt(cg().data.getItem(k + '.t'), 10) || 0) : -1; } } catch (e) {}
-      try { b = localStorage.getItem(k); bt = b ? (parseInt(localStorage.getItem(k + '.t'), 10) || 0) : -1; } catch (e) {}
-      if (at < 0 && bt < 0) return null;
-      return at >= bt ? a : b;
+    set: function (src, k, v) {
+      try { if (src === 'cloud') { if (cg()) cg().data.setItem(k, v); return; } } catch (e) { return; }
+      try { localStorage.setItem(k, v); } catch (e) {}
+    },
+    del: function (src, k) {
+      try { if (src === 'cloud') { if (cg()) cg().data.removeItem(k); return; } } catch (e) { return; }
+      try { localStorage.removeItem(k); } catch (e) {}
     }
   };
 })();
