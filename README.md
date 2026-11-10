@@ -35,5 +35,6 @@ Web: `godot --headless --path . --export-release "Web" build/web/index.html` (si
 - Rebuild (headless, deterministic, validates every level with `Sudoku.analyze_targets`):
   `godot --headless --path . -s tools/build_levels.gd`
 - QA: `SD_DEBUG.startLevel(n)` jumps to level n (debug builds).
+- Cheat (staging / debug builds only, never in the release export): a **CHEAT: Solve** button at the top centre of every grid screen fills the grid in one tap and goes to results; F9 does the same on desktop. Lives in `debug/qa_hooks.gd`.
 - Debug hook H7 (debug builds only): on-screen `TimerDebug` readout on Beat the Tide levels; the state dump
   (`step_dump()` / `window.SD_QA`) includes `level, objective, params, target, elapsed_ms, reveals, continues, par_time_s, timer_running`.

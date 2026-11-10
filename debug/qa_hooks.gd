@@ -3,15 +3,20 @@
 ##      show(screen), solve(), rect(nodeName) -> window.__sdRect (CSS px), layout() -> window.__sdLayout}
 ##      window.SD_QA (state), window.__adsLog (H2), window.__midgame (H3), window.__sdDump (H5).
 ##      URL ?ads=available|unavailable|error|timeout (H1), ?clock=<offset ms>.
-## Keys: F6 cycle ad mode, F7 dump state, F8 +25h clock offset.
+## Keys: F6 cycle ad mode, F7 dump state, F8 +25h clock offset, F9 cheat-solve the current grid.
+## Cheat button: a small "CHEAT: Solve" button floats at the top centre of every grid screen (staging / debug
+## builds only, since this file is never in the release export); one tap fills the grid -> results screen.
 extends Node
 
 var _cbs: Array = []
+var _cheat_layer: CanvasLayer = null
+var _cheat_btn: Button = null
 
 func _dbg(): return get_parent()
 
 func _ready() -> void:
 	print("[SD][debug] QA hooks enabled (debug build)")
+	_make_cheat_button()
 	Ads.changed.connect(publish)
 	Ads.logged.connect(_on_ad_logged)
 	if not OS.has_feature("web"): return
@@ -41,6 +46,32 @@ func _ready() -> void:
 		dbg[k] = cb
 
 func _main(): return _dbg().main
+
+## Floating cheat button on its own CanvasLayer (above the game UI, outside main's node tree, so layout
+## lookups in main never see it). Shown only while a grid is being played.
+func _make_cheat_button() -> void:
+	_cheat_layer = CanvasLayer.new()
+	_cheat_layer.name = "CheatLayer"
+	_cheat_layer.layer = 100
+	add_child(_cheat_layer)
+	_cheat_btn = Button.new()
+	_cheat_btn.name = "CheatSolveButton"
+	_cheat_btn.text = "CHEAT: Solve"
+	_cheat_btn.focus_mode = Control.FOCUS_NONE
+	_cheat_btn.add_theme_font_size_override("font_size", 20)
+	_cheat_btn.modulate = Color(1, 1, 1, 0.85)
+	_cheat_btn.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_cheat_btn.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_cheat_btn.position.y = 4
+	_cheat_btn.visible = false
+	_cheat_btn.pressed.connect(func(): solve_current(); publish())
+	_cheat_layer.add_child(_cheat_btn)
+
+func _process(_dt: float) -> void:
+	if _cheat_btn == null: return
+	var m = _main()
+	var on = m != null and m.screen_name == "grid" and m.board != null
+	if _cheat_btn.visible != on: _cheat_btn.visible = on
 
 ## Mobile/layout QA: jump to a screen ("title", "harbour", "hint", "settings", "results", "resume" = saved grid).
 func show_screen(n: String) -> void:
@@ -148,6 +179,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_F8:
 			_dbg().clock_offset_ms += 25 * 3600 * 1000
 			print("[SD][debug] clock offset ms = ", _dbg().clock_offset_ms)
+		KEY_F9:
+			solve_current()
 		_:
 			return
 	publish()
